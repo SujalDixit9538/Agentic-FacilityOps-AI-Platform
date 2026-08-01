@@ -1,20 +1,34 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
 from backend.services.logging_service import get_logger
 from backend.utils.api_responses import success_response
+from backend.api.dependencies import get_db
 
 logger = get_logger(__name__)
 router = APIRouter()
 
 @router.get("/health")
-async def health_check():
+async def health_check(db: Session = Depends(get_db)):
     """
-    Lightweight health endpoint to verify the backend is running.
+    Health endpoint that also verifies database connectivity (ETP-005 Integration).
     """
     logger.info("Health check endpoint accessed.")
-    logger.debug("Health check debug trace successful.")
     
-    # Utilize our new shared utility
+    try:
+        # Lightweight query to confirm database initialization succeeds
+        db.execute(text("SELECT 1"))
+        db_status = "operational"
+    except Exception as e:
+        logger.error(f"Database connection failed: {e}")
+        db_status = "degraded"
+    
+    # Utilize our shared utility
     return success_response(
         message="FacilityOPS Backend is operational.",
-        data={"status": "healthy"}
+        data={
+            "status": "healthy",
+            "database": db_status
+        }
     )
