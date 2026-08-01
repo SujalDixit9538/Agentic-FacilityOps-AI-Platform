@@ -8,8 +8,12 @@ from backend.middleware.exceptions import global_exception_handler
 from backend.services.logging_service import setup_logging
 from backend.middleware.timing import timing_middleware
 from backend.core.config import settings
+from backend.database.connection import engine
+from backend.database.base import Base
 
 setup_logging()
+
+Base.metadata.create_all(bind=engine)
 
 # Initialize FastAPI Application
 app = FastAPI(

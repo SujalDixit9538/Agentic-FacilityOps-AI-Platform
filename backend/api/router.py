@@ -1,14 +1,17 @@
 from fastapi import APIRouter
 from backend.api import health
+from backend.api import energy
 
 # Central API Router with versioning
 api_router = APIRouter(prefix="/api/v1")
 
-# Register the health endpoint
-api_router.include_router(health.router, tags=["Health"])
+# Register endpoints
+api_router.include_router(health.router, tags=["Platform Health"])
 
-# Placeholders for future ETP modules (Do not uncomment yet)
-# api_router.include_router(energy.router, prefix="/energy", tags=["Energy"])
+# Register the Energy Module
+api_router.include_router(energy.router, prefix="/energy", tags=["Energy"])
+
+# Placeholders for future ETP modules
 # api_router.include_router(maintenance.router, prefix="/maintenance", tags=["Maintenance"])
 # api_router.include_router(occupancy.router, prefix="/occupancy", tags=["Occupancy"])
 # api_router.include_router(security.router, prefix="/security", tags=["Security"])
