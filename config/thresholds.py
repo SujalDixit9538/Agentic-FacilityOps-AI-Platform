@@ -1,0 +1,3 @@
+# Agent Intelligence Thresholds
+CRITICAL_HEALTH_SCORE = 40
+WARNING_HEALTH_SCORE = 70

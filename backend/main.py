@@ -5,8 +5,11 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.api.router import api_router
 from backend.middleware.exceptions import global_exception_handler
+from backend.services.logging_service import setup_logging
 from backend.middleware.timing import timing_middleware
 from backend.core.config import settings
+
+setup_logging()
 
 # Initialize FastAPI Application
 app = FastAPI(
