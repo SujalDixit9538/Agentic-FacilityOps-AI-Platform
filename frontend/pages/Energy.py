@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from frontend.services.api_client import safe_get
+from frontend.services.api_client import safe_get, safe_post
 from frontend.components.metrics import render_metric_row
 from frontend.components.status import render_status_banner, render_empty_state
 
@@ -9,6 +9,23 @@ st.set_page_config(page_title="Energy | FacilityOPS", layout="wide")
 
 st.title("⚡ Energy Intelligence & Monitoring")
 st.markdown("Monitor utility data, IoT sensor inputs, and module health.")
+
+# Add the Administrative Sidebar Control
+with st.sidebar:
+    st.markdown("### ⚙️ Module Controls")
+    st.info("Use this tool to simulate an influx of new IoT sensor data.")
+    
+    seed_facility = st.selectbox("Target Facility", ["FAC-001", "FAC-002"], key="seed_target")
+    
+    if st.button("🔄 Trigger Mock Data Ingestion", use_container_width=True):
+        with st.spinner("Generating time-series data..."):
+            # Call our POST endpoint
+            res = safe_post("/energy/seed", params={"facility_id": seed_facility, "days": 7})
+            if res.get("success"):
+                st.success(f"Ingested {res['data']['records_seeded']} new records.")
+                st.rerun() # Refresh the page to show new data
+            else:
+                st.error("Ingestion pipeline failed.")
 
 # 1. Module Health Check Integration
 health_data = safe_get("/energy/health")

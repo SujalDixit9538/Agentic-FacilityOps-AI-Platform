@@ -10,6 +10,8 @@ from backend.middleware.timing import timing_middleware
 from backend.core.config import settings
 from backend.database.connection import engine
 from backend.database.base import Base
+from backend.database.connection import SessionLocal
+from backend.services.mock_iot_service import seed_mock_energy_data
 
 setup_logging()
 
@@ -47,3 +49,20 @@ app.include_router(api_router)
 async def root_redirect():
     """Redirects the root URL to the interactive Swagger UI."""
     return RedirectResponse(url="/api/docs")
+
+@app.on_event("startup")
+async def initialize_default_data():
+    """
+    Automatically seeds the database with initial mock data on startup 
+    if the database is empty. Prevents the "empty state" on first boot.
+    """
+    db = SessionLocal()
+    try:
+        # Seed default facilities
+        seed_mock_energy_data(db, facility_id="FAC-001", days=7)
+        seed_mock_energy_data(db, facility_id="FAC-002", days=7)
+    except Exception as e:
+        # Graceful failure if database isn't ready
+        print(f"Startup data seeding skipped: {e}")
+    finally:
+        db.close()
