@@ -39,3 +39,13 @@ async def get_energy_records(facility_id: str, limit: int = 200, db: Session = D
         message=f"Retrieved {len(data)} records for {facility_id}",
         data={"records": data}
     )
+
+@router.get("/analyze/{facility_id}")
+async def analyze_energy(facility_id: str, days: int = Query(7), db: Session = Depends(get_db)):
+    """Runs the Energy Agent analysis on the specified facility."""
+    service = EnergyService(db)
+    insights = service.run_agent_analysis(facility_id, days)
+    return success_response(
+        message=f"Energy analysis completed for {facility_id}",
+        data=insights
+    )
