@@ -43,3 +43,14 @@ async def get_security_events(facility_id: str, limit: int = Query(50), db: Sess
     
     data = [SecurityEventResponse.model_validate(e).model_dump() for e in events]
     return success_response(message=f"Retrieved {len(data)} security events", data={"events": data})
+
+@router.get("/analyze/{facility_id}")
+async def analyze_facility_security(facility_id: str, db: Session = Depends(get_db)):
+    """Runs the Occupancy & Security Agent analysis on the specified facility."""
+    service = OccupancyService(db)
+    insights = service.run_agent_analysis(facility_id)
+    
+    return success_response(
+        message=f"Occupancy and Security analysis completed for {facility_id}",
+        data=insights
+    )

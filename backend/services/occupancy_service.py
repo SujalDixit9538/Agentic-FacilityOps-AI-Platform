@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from backend.agents.occupancy.agent import OccupancyAgent
 from backend.repositories.occupancy_repository import OccupancyRepository
 from backend.schemas.occupancy import OccupancyBase, SecurityEventBase
 import logging
@@ -31,9 +32,14 @@ class OccupancyService:
         logger.info(f"Logging security event ({data.event_type}) for {data.facility_id}")
         return self.repository.create_security_event(data)
 
+    def run_agent_analysis(self, facility_id: str):
+            """Triggers the Occupancy Agent to analyze the facility's current threat level."""
+            agent = OccupancyAgent(self.repository.db)
+            return agent.analyze_facility(facility_id)
+
     def get_module_status(self):
         """Returns the operational status of the Occupancy & Security module."""
         return {
             "status": "operational",
-            "intelligence_engine": "pending_initialization"
+            "intelligence_engine": "rules_based_active"
         }
