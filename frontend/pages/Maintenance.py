@@ -1,10 +1,31 @@
-import streamlit as st
+import sys
 import pandas as pd
-from frontend.services.api_client import safe_get
+import streamlit as st
+from frontend.services.api_client import safe_get, safe_post
+from pathlib import Path
 from frontend.components.status import render_status_banner, render_empty_state
+
+root_dir = str(Path(__file__).parent.parent.parent.absolute())
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
 
 # Page Configuration
 st.set_page_config(page_title="Maintenance | FacilityOPS", layout="wide")
+
+with st.sidebar:
+    st.markdown("### ⚙️ Module Controls")
+    st.info("Simulate asset registration and maintenance history ingestion.")
+    
+    seed_facility = st.selectbox("Target Facility", ["FAC-001", "FAC-002"], key="maint_seed_target")
+    
+    if st.button("🔄 Trigger Mock Data Ingestion", use_container_width=True):
+        with st.spinner("Provisioning assets and repair logs..."):
+            res = safe_post("/maintenance/seed", params={"facility_id": seed_facility})
+            if res.get("success"):
+                st.success(f"Ingested {res['data']['assets_seeded']} assets and {res['data']['logs_seeded']} logs.")
+                st.rerun() 
+            else:
+                st.error("Ingestion pipeline failed.")
 
 st.title("🔧 Predictive Maintenance")
 st.markdown("Monitor facility assets, repair histories, and equipment health.")

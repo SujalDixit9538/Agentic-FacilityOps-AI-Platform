@@ -5,6 +5,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.api.router import api_router
 from backend.middleware.exceptions import global_exception_handler
+from backend.services.mock_maintenance_service import seed_mock_maintenance_data
 from backend.services.logging_service import setup_logging
 from backend.middleware.timing import timing_middleware
 from backend.core.config import settings
@@ -56,11 +57,18 @@ async def initialize_default_data():
     Automatically seeds the database with initial mock data on startup 
     if the database is empty. Prevents the "empty state" on first boot.
     """
+    from backend.database.connection import SessionLocal
     db = SessionLocal()
     try:
-        # Seed default facilities
+        # Seed Energy Data
+        from backend.services.mock_iot_service import seed_mock_energy_data
         seed_mock_energy_data(db, facility_id="FAC-001", days=7)
         seed_mock_energy_data(db, facility_id="FAC-002", days=7)
+    
+        # Seed Maintenance Data (ETP-011)
+        seed_mock_maintenance_data(db, facility_id="FAC-001")
+        seed_mock_maintenance_data(db, facility_id="FAC-002")
+        
     except Exception as e:
         # Graceful failure if database isn't ready
         print(f"Startup data seeding skipped: {e}")
