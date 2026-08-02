@@ -2,6 +2,7 @@ import logging
 from sqlalchemy.orm import Session
 from backend.repositories.cost_repository import CostRepository
 from backend.agents.cost.analyzer import CostAnalyzer
+from backend.agents.cost.actions import CostActionEngine
 from backend.services.alert_service import generate_alert
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ class CostAgent:
         self.db = db
         self.repository = CostRepository(db)
         self.analyzer = CostAnalyzer()
+        self.action_engine = CostActionEngine()
 
     def analyze_facility_finances(self, facility_id: str):
         logger.info(f"CostAgent initiating financial analysis for {facility_id}")
@@ -36,19 +38,29 @@ class CostAgent:
 
         # 3. Process anomalies into standard alerts
         alerts_generated = []
-        for anomaly in analysis_result.get("anomalies", []):
-            alert = generate_alert(
-                source_agent="CostAgent",
-                alert_type=anomaly["type"],
-                severity=anomaly["severity"],
-                message=anomaly["message"]
-            )
-            alerts_generated.append(alert)
+        recommendations = []
+        
+        anomalies = analysis_result.get("anomalies", [])
+        
+        if anomalies:
+            # --- Generate Mitigations ---
+            recommendations = self.action_engine.generate_recommendations(anomalies)
+            
+            # --- Generate Alerts ---
+            for anomaly in anomalies:
+                alert = generate_alert(
+                    source_agent="CostAgent",
+                    alert_type=anomaly["type"],
+                    severity=anomaly["severity"],
+                    message=anomaly["message"]
+                )
+                alerts_generated.append(alert)
 
-        logger.info(f"CostAgent completed analysis. Generated {len(alerts_generated)} alerts.")
+        logger.info(f"CostAgent completed analysis. Generated {len(alerts_generated)} alerts and {len(recommendations)} recommendations.")
 
         return {
             "facility_id": facility_id,
             "analysis": analysis_result,
-            "alerts": alerts_generated
+            "alerts": alerts_generated,
+            "recommendations": recommendations
         }
