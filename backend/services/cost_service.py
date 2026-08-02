@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from backend.repositories.cost_repository import CostRepository
 from backend.schemas.cost import CostRecordBase
+from backend.agents.cost.agent import CostAgent
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,9 +23,14 @@ class CostService:
         logger.info(f"Logging new {cost_data.category} cost for facility: {cost_data.facility_id}")
         return self.repository.create_cost_record(cost_data)
 
+    def run_agent_analysis(self, facility_id: str): # <-- NEW METHOD
+        """Triggers the Cost Agent to analyze the facility's financial health."""
+        agent = CostAgent(self.repository.db)
+        return agent.analyze_facility_finances(facility_id)
+
     def get_module_status(self):
         """Returns the operational status of the Cost module."""
         return {
             "status": "operational",
-            "intelligence_engine": "pending_initialization"
+            "intelligence_engine": "rules_based_active"
         }

@@ -35,3 +35,14 @@ async def get_cost_records(facility_id: str, limit: int = Query(100), db: Sessio
     
     data = [CostRecordResponse.model_validate(r).model_dump() for r in records]
     return success_response(message=f"Retrieved {len(data)} cost records", data={"records": data})
+
+@router.get("/analyze/{facility_id}")
+async def analyze_facility_costs(facility_id: str, db: Session = Depends(get_db)):
+    """Runs the Cost Optimization Agent analysis on the specified facility's ledger."""
+    service = CostService(db)
+    insights = service.run_agent_analysis(facility_id)
+    
+    return success_response(
+        message=f"Financial analysis completed for {facility_id}",
+        data=insights
+    )
