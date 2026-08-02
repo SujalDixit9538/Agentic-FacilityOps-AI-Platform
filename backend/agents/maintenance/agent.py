@@ -2,6 +2,7 @@ import logging
 from sqlalchemy.orm import Session
 from backend.database.models.maintenance import Asset
 from backend.repositories.maintenance_repository import MaintenanceRepository
+from backend.agents.maintenance.actions import MaintenanceActionEngine
 from backend.agents.maintenance.analyzer import MaintenanceAnalyzer
 from backend.services.alert_service import generate_alert
 
@@ -16,6 +17,7 @@ class MaintenanceAgent:
         self.db = db
         self.repository = MaintenanceRepository(db)
         self.analyzer = MaintenanceAnalyzer()
+        self.action_engine = MaintenanceActionEngine()
 
     def analyze_asset(self, asset_id: str):
         logger.info(f"MaintenanceAgent initiating analysis for asset {asset_id}")
@@ -49,19 +51,30 @@ class MaintenanceAgent:
 
         # 4. Process risk factors into standardized system alerts
         alerts_generated = []
-        for anomaly in analysis_result.get("anomalies", []):
-            alert = generate_alert(
-                source_agent="MaintenanceAgent",
-                alert_type=anomaly["type"],
-                severity=anomaly["severity"],
-                message=f"[{asset.asset_type}] " + anomaly["message"]
-            )
-            alerts_generated.append(alert)
+        recommendations = []
 
-        logger.info(f"MaintenanceAgent completed analysis. Generated {len(alerts_generated)} alerts.")
+        anomalies = analysis_result.get("anomalies", [])
+
+        if anomalies:
+            # --- Generate Mitigations ---
+            recommendations = self.action_engine.generate_recommendations(anomalies)
+
+            # --- Generate Alerts ---
+            for anomaly in anomalies:
+                alert = generate_alert(
+                    source_agent="MaintenanceAgent",
+                    alert_type=anomaly["type"],
+                    severity=anomaly["severity"],
+                    message=f"[{asset.asset_type}] " + anomaly["message"]
+                )
+                alerts_generated.append(alert)
+
+
+        logger.info(f"MaintenanceAgent completed analysis. Generated {len(alerts_generated)} alerts and {len(recommendations)} recommendations.")
 
         return {
             "asset_id": asset_id,
             "analysis": analysis_result,
-            "alerts": alerts_generated
+            "alerts": alerts_generated,
+            "recommendations": recommendations
         }
