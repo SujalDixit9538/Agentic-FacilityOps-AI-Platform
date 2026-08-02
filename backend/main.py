@@ -6,6 +6,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from backend.api.router import api_router
 from backend.middleware.exceptions import global_exception_handler
 from backend.services.mock_maintenance_service import seed_mock_maintenance_data
+from backend.services.mock_occupancy_service import seed_mock_occupancy_data
 from backend.services.logging_service import setup_logging
 from backend.middleware.timing import timing_middleware
 from backend.core.config import settings
@@ -64,13 +65,17 @@ async def initialize_default_data():
         from backend.services.mock_iot_service import seed_mock_energy_data
         seed_mock_energy_data(db, facility_id="FAC-001", days=7)
         seed_mock_energy_data(db, facility_id="FAC-002", days=7)
-    
-        # Seed Maintenance Data (ETP-011)
+        
+        # Seed Maintenance Data
+        from backend.services.mock_maintenance_service import seed_mock_maintenance_data
         seed_mock_maintenance_data(db, facility_id="FAC-001")
         seed_mock_maintenance_data(db, facility_id="FAC-002")
         
+        # Seed Occupancy & Security Data (ETP-015)
+        seed_mock_occupancy_data(db, facility_id="FAC-001", days=7)
+        seed_mock_occupancy_data(db, facility_id="FAC-002", days=7)
+        
     except Exception as e:
-        # Graceful failure if database isn't ready
         print(f"Startup data seeding skipped: {e}")
     finally:
         db.close()
