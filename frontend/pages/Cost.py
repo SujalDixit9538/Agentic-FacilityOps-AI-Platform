@@ -9,11 +9,27 @@ if root_dir not in sys.path:
 
 
 import pandas as pd
-from frontend.services.api_client import safe_get
+from frontend.services.api_client import safe_get, safe_post
 from frontend.components.status import render_status_banner, render_empty_state
 
 # Page Configuration
 st.set_page_config(page_title="Cost Optimization | FacilityOPS", layout="wide")
+
+with st.sidebar:
+    st.markdown("### ⚙️ Module Controls")
+    st.info("Simulate facility financial records and historical expenses.")
+    
+    seed_facility = st.selectbox("Target Facility", ["FAC-001", "FAC-002"], key="cost_seed_target")
+    
+    if st.button("🔄 Trigger Finance Ingestion", use_container_width=True):
+        with st.spinner("Provisioning financial ledgers..."):
+            res = safe_post("/cost/seed", params={"facility_id": seed_facility, "months": 6})
+            if res.get("success"):
+                st.success(f"Ingested {res['data']['financial_records_seeded']} financial records.")
+                st.rerun() 
+            else:
+                st.error("Ingestion pipeline failed.")
+
 
 st.title("💰 Cost Optimization")
 st.markdown("Track, analyze, and optimize facility operating expenses.")
