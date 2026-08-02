@@ -43,3 +43,17 @@ async def get_maintenance_logs(asset_id: str, limit: int = 50, db: Session = Dep
     
     data = [MaintenanceLogResponse.model_validate(l).model_dump() for l in logs]
     return success_response(message=f"Retrieved {len(data)} maintenance logs", data={"logs": data})
+
+@router.get("/analyze/{asset_id}")
+async def analyze_asset(asset_id: str, db: Session = Depends(get_db)):
+    """Runs the Predictive Maintenance Agent analysis on the specified asset."""
+    service = MaintenanceService(db)
+    insights = service.run_agent_analysis(asset_id)
+    
+    if insights.get("status") == "error":
+        return success_response(message="Asset analysis failed", data=insights)
+        
+    return success_response(
+        message=f"Maintenance analysis completed for {asset_id}",
+        data=insights
+    )

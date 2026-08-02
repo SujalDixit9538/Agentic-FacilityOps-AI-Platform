@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from backend.agents.maintenance.agent import MaintenanceAgent
 from backend.repositories.maintenance_repository import MaintenanceRepository
 from backend.schemas.maintenance import AssetBase, MaintenanceLogBase
 import logging
@@ -31,10 +32,15 @@ class MaintenanceService:
         """Records a maintenance event (repair, inspection, failure)."""
         logger.info(f"Logging maintenance event for asset: {log_data.asset_id}")
         return self.repository.create_maintenance_log(log_data)
-        
+
+    def run_agent_analysis(self, asset_id: str): # <-- NEW METHOD
+        """Triggers the Maintenance Agent to analyze specific equipment."""
+        agent = MaintenanceAgent(self.repository.db)
+        return agent.analyze_asset(asset_id)
+
     def get_module_status(self):
         """Returns the operational status of the Maintenance module."""
         return {
             "status": "operational",
-            "intelligence_engine": "pending_initialization"
+            "intelligence_engine": "rules_based_active"
         }
