@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from backend.api import cost
 from backend.api import health
 from backend.api import energy
 from backend.api import occupancy
@@ -19,5 +20,5 @@ api_router.include_router(maintenance.router, prefix="/maintenance", tags=["Main
 # Register the Occupancy & Security Module
 api_router.include_router(occupancy.router, prefix="/occupancy", tags=["Occupancy"])
 
-# Placeholders for future ETP modules
-# api_router.include_router(cost.router, prefix="/cost", tags=["Cost"])
+# Register the Cost Optimization Module
+api_router.include_router(cost.router, prefix="/cost", tags=["Cost"])
