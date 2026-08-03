@@ -4,6 +4,7 @@ from backend.api import health
 from backend.api import energy
 from backend.api import occupancy
 from backend.api import maintenance
+from backend.api import executive
 
 # Central API Router with versioning
 api_router = APIRouter(prefix="/api/v1")
@@ -22,3 +23,6 @@ api_router.include_router(occupancy.router, prefix="/occupancy", tags=["Occupanc
 
 # Register the Cost Optimization Module
 api_router.include_router(cost.router, prefix="/cost", tags=["Cost"])
+
+# Register the Executive Agent Module
+api_router.include_router(executive.router, prefix="/executive", tags=["Executive Intelligence"])
