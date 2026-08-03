@@ -6,4 +6,7 @@ streamlit==1.31.0
 requests==2.31.0
 PyYAML==6.0.1
 SQLAlchemy==2.0.27
-pandas==2.2.0
+pandas==3.0.5
+numpy==2.5.1
+joblib==1.5.3
+scikit-learn==1.6.1
