@@ -1,0 +1,1450 @@
+facility_id,facility_type,total_area_sqft,total_floors
+F-0000,Education,7432,4
+F-0001,Education,2720,4
+F-0002,Education,5376,4
+F-0003,Education,23685,4
+F-0004,Education,116607,4
+F-0005,Education,8000,4
+F-0006,Lodging/residential,27926,7
+F-0007,Education,121074,4
+F-0008,Education,60809,4
+F-0009,Office,27000,2
+F-0010,Entertainment/public assembly,370773,1
+F-0011,Education,49073,4
+F-0012,Lodging/residential,37100,7
+F-0013,Education,99380,4
+F-0014,Education,86250,4
+F-0015,Office,83957,2
+F-0016,Education,54644,4
+F-0017,Office,15250,2
+F-0018,Education,111891,4
+F-0019,Office,18717,2
+F-0020,Education,110272,4
+F-0021,Office,7043,2
+F-0022,Education,3569,4
+F-0023,Education,130885,4
+F-0024,Education,105545,4
+F-0025,Office,103286,2
+F-0026,Office,26953,2
+F-0027,Lodging/residential,59200,7
+F-0028,Office,52957,2
+F-0029,Education,113866,4
+F-0030,Education,93897,4
+F-0031,Education,61904,4
+F-0032,Office,48392,2
+F-0033,Lodging/residential,38686,7
+F-0034,Lodging/residential,42731,7
+F-0035,Lodging/residential,41617,7
+F-0036,Lodging/residential,53130,7
+F-0037,Lodging/residential,53130,7
+F-0038,Office,12769,2
+F-0039,Office,64619,2
+F-0040,Entertainment/public assembly,26944,1
+F-0041,Office,93860,2
+F-0042,Other,226506,1
+F-0043,Retail,59071,1
+F-0044,Retail,283,1
+F-0045,Retail,15304,1
+F-0046,Retail,9045,1
+F-0047,Retail,31666,1
+F-0048,Other,9569,1
+F-0049,Lodging/residential,24456,7
+F-0050,Other,4698,1
+F-0051,Parking,387638,2
+F-0052,Education,106523,4
+F-0053,Office,87742,2
+F-0054,Education,7867,4
+F-0055,Office,16726,2
+F-0056,Lodging/residential,60088,7
+F-0057,Lodging/residential,65359,7
+F-0058,Lodging/residential,83379,7
+F-0059,Entertainment/public assembly,81337,1
+F-0060,Education,81576,4
+F-0061,Lodging/residential,38686,7
+F-0062,Lodging/residential,42731,7
+F-0063,Lodging/residential,41617,7
+F-0064,Lodging/residential,53130,7
+F-0065,Lodging/residential,53130,7
+F-0066,Lodging/residential,37241,7
+F-0067,Lodging/residential,24456,7
+F-0068,Parking,487433,2
+F-0069,Parking,387638,2
+F-0070,Parking,387638,2
+F-0071,Parking,387638,2
+F-0072,Parking,387638,2
+F-0073,Parking,387638,2
+F-0074,Parking,387638,2
+F-0075,Education,80942,4
+F-0076,Education,128887,4
+F-0077,Lodging/residential,24456,7
+F-0078,Education,76257,4
+F-0079,Office,36240,2
+F-0080,Office,156111,2
+F-0081,Other,3025,1
+F-0082,Office,10743,2
+F-0083,Other,2070,1
+F-0084,Office,4038,2
+F-0085,Lodging/residential,37241,7
+F-0086,Education,10932,4
+F-0087,Entertainment/public assembly,6412,1
+F-0088,Entertainment/public assembly,76527,1
+F-0089,Retail,161755,1
+F-0090,Lodging/residential,59200,7
+F-0091,Education,68094,4
+F-0092,Office,10779,2
+F-0093,Office,33370,2
+F-0094,Education,29469,4
+F-0095,Lodging/residential,200933,7
+F-0096,Lodging/residential,200933,7
+F-0097,Lodging/residential,187647,7
+F-0098,Lodging/residential,200933,7
+F-0099,Office,2260,2
+F-0100,Lodging/residential,24456,7
+F-0101,Office,18860,2
+F-0102,Office,15876,2
+F-0103,Education,21657,4
+F-0104,Office,45330,2
+F-0105,Education,50623,5
+F-0106,Education,5374,4
+F-0107,Education,97532,10
+F-0108,Education,81580,5
+F-0109,Education,56995,6
+F-0110,Education,27814,8
+F-0111,Education,118338,7
+F-0112,Education,32206,6
+F-0113,Education,100481,9
+F-0114,Education,139683,13
+F-0115,Education,129716,6
+F-0116,Education,37265,5
+F-0117,Education,15489,4
+F-0118,Education,138316,8
+F-0119,Education,91149,7
+F-0120,Education,68211,7
+F-0121,Education,150318,9
+F-0122,Education,83043,6
+F-0123,Education,61204,6
+F-0124,Education,38319,6
+F-0125,Education,16802,6
+F-0126,Education,21539,5
+F-0127,Lodging/residential,27071,6
+F-0128,Lodging/residential,102774,7
+F-0129,Lodging/residential,102957,7
+F-0130,Lodging/residential,62893,16
+F-0131,Lodging/residential,66661,7
+F-0132,Lodging/residential,83108,8
+F-0133,Lodging/residential,64723,8
+F-0134,Lodging/residential,49589,8
+F-0135,Lodging/residential,66532,10
+F-0136,Lodging/residential,56467,9
+F-0137,Entertainment/public assembly,64024,6
+F-0138,Public services,118231,6
+F-0139,Public services,56629,6
+F-0140,Office,50020,11
+F-0141,Office,44789,5
+F-0142,Office,45348,4
+F-0143,Office,40085,4
+F-0144,Office,57673,5
+F-0145,Office,14219,4
+F-0146,Office,31614,8
+F-0147,Office,82548,7
+F-0148,Office,174601,12
+F-0149,Office,81881,8
+F-0150,Office,65657,8
+F-0151,Office,30495,8
+F-0152,Office,10301,2
+F-0153,Office,16092,3
+F-0154,Office,34455,8
+F-0155,Office,51688,8
+F-0156,Public services,43681,1
+F-0157,Office,5258,2
+F-0158,Office,10135,2
+F-0159,Education,9788,4
+F-0160,Entertainment/public assembly,15786,1
+F-0161,Education,11329,4
+F-0162,Education,98829,4
+F-0163,Education,72102,4
+F-0164,Warehouse/storage,12908,1
+F-0165,Warehouse/storage,3877,1
+F-0166,Lodging/residential,553210,7
+F-0167,Lodging/residential,86323,7
+F-0168,Education,183460,4
+F-0169,Education,179559,4
+F-0170,Retail,45224,1
+F-0171,Office,131797,2
+F-0172,Office,121440,2
+F-0173,Education,90903,4
+F-0174,Education,90900,4
+F-0175,Education,111635,4
+F-0176,Education,62238,4
+F-0177,Entertainment/public assembly,167066,1
+F-0178,Office,23392,2
+F-0179,Food sales and service,24867,1
+F-0180,Education,24586,4
+F-0181,Education,148829,4
+F-0182,Entertainment/public assembly,1022,1
+F-0183,Education,132518,4
+F-0184,Education,34171,4
+F-0185,Education,84300,4
+F-0186,Religious worship,1629,1
+F-0187,Education,44203,4
+F-0188,Office,23549,2
+F-0189,Education,7481,4
+F-0190,Education,137040,4
+F-0191,Education,78268,4
+F-0192,Education,151637,4
+F-0193,Office,6203,2
+F-0194,Office,155682,2
+F-0195,Office,9703,2
+F-0196,Entertainment/public assembly,40531,1
+F-0197,Public services,102856,1
+F-0198,Office,163959,2
+F-0199,Parking,405083,2
+F-0200,Entertainment/public assembly,143093,1
+F-0201,Education,219608,4
+F-0202,Lodging/residential,74682,7
+F-0203,Lodging/residential,63348,7
+F-0204,Lodging/residential,30949,7
+F-0205,Lodging/residential,60086,7
+F-0206,Public services,345837,1
+F-0207,Public services,99700,1
+F-0208,Healthcare,36904,1
+F-0209,Education,193294,4
+F-0210,Education,71248,4
+F-0211,Education,48411,4
+F-0212,Education,327256,4
+F-0213,Education,49662,4
+F-0214,Education,91273,4
+F-0215,Lodging/residential,36406,7
+F-0216,Education,137065,4
+F-0217,Education,282946,4
+F-0218,Public services,16411,1
+F-0219,Education,96124,4
+F-0220,Education,122592,4
+F-0221,Education,204349,4
+F-0222,Entertainment/public assembly,11935,1
+F-0223,Education,261188,4
+F-0224,Education,272278,4
+F-0225,Lodging/residential,216526,7
+F-0226,Office,74180,2
+F-0227,Entertainment/public assembly,17132,1
+F-0228,Lodging/residential,49108,7
+F-0229,Education,140092,4
+F-0230,Education,10334,4
+F-0231,Education,33739,4
+F-0232,Entertainment/public assembly,24345,1
+F-0233,Education,25139,4
+F-0234,Education,179167,4
+F-0235,Education,9309,4
+F-0236,Entertainment/public assembly,144086,1
+F-0237,Public services,101262,1
+F-0238,Office,45017,2
+F-0239,Lodging/residential,106440,7
+F-0240,Lodging/residential,111304,7
+F-0241,Entertainment/public assembly,51999,1
+F-0242,Parking,157113,2
+F-0243,Parking,557217,2
+F-0244,Education,95717,4
+F-0245,Education,88486,4
+F-0246,Office,202435,2
+F-0247,Education,64560,4
+F-0248,Education,24643,4
+F-0249,Entertainment/public assembly,179449,1
+F-0250,Education,131710,4
+F-0251,Education,12773,4
+F-0252,Education,4314,4
+F-0253,Education,65907,4
+F-0254,Entertainment/public assembly,254766,1
+F-0255,Education,49078,4
+F-0256,Education,16744,4
+F-0257,Education,75650,4
+F-0258,Education,71224,4
+F-0259,Education,77469,4
+F-0260,Education,126985,4
+F-0261,Education,89770,4
+F-0262,Entertainment/public assembly,20804,1
+F-0263,Education,87673,4
+F-0264,Office,83660,2
+F-0265,Office,118966,2
+F-0266,Education,30543,4
+F-0267,Entertainment/public assembly,72193,1
+F-0268,Entertainment/public assembly,77844,1
+F-0269,Entertainment/public assembly,809530,1
+F-0270,Office,29778,2
+F-0271,Education,71421,4
+F-0272,Education,4583,4
+F-0273,Office,140345,2
+F-0274,Office,42214,2
+F-0275,Office,70832,2
+F-0276,Office,70837,2
+F-0277,Education,12761,4
+F-0278,Office,148101,2
+F-0279,Education,49384,4
+F-0280,Entertainment/public assembly,105505,1
+F-0281,Food sales and service,28862,1
+F-0282,Office,28750,2
+F-0283,Entertainment/public assembly,51920,1
+F-0284,Entertainment/public assembly,230259,1
+F-0285,Utility,21958,2
+F-0286,Lodging/residential,32841,7
+F-0287,Office,33713,2
+F-0288,Entertainment/public assembly,10733,1
+F-0289,Entertainment/public assembly,9666,1
+F-0290,Office,51732,2
+F-0291,Public services,90635,1
+F-0292,Public services,33743,1
+F-0293,Office,408000,2
+F-0294,Entertainment/public assembly,14913,1
+F-0295,Education,83400,4
+F-0296,Public services,22000,1
+F-0297,Education,66200,4
+F-0298,Entertainment/public assembly,39541,1
+F-0299,Education,356000,4
+F-0300,Education,62800,4
+F-0301,Public services,51176,1
+F-0302,Education,57100,4
+F-0303,Entertainment/public assembly,15950,1
+F-0304,Entertainment/public assembly,194300,1
+F-0305,Office,8637,2
+F-0306,Education,51500,4
+F-0307,Public services,10873,1
+F-0308,Public services,5033,1
+F-0309,Entertainment/public assembly,2067,1
+F-0310,Public services,22000,1
+F-0311,Education,50000,4
+F-0312,Entertainment/public assembly,6625,1
+F-0313,Education,103800,4
+F-0314,Education,225000,4
+F-0315,Entertainment/public assembly,20644,1
+F-0316,Public services,78550,1
+F-0317,Office,16098,2
+F-0318,Office,105000,2
+F-0319,Public services,13100,1
+F-0320,Education,105500,4
+F-0321,Public services,15913,1
+F-0322,Education,37083,4
+F-0323,Education,282200,4
+F-0324,Entertainment/public assembly,11910,1
+F-0325,Education,59200,4
+F-0326,Entertainment/public assembly,45548,1
+F-0327,Education,99325,4
+F-0328,Education,47200,4
+F-0329,Entertainment/public assembly,3133,1
+F-0330,Education,65000,4
+F-0331,Education,288800,4
+F-0332,Education,90400,4
+F-0333,Education,59900,4
+F-0334,Education,57100,4
+F-0335,Office,229000,2
+F-0336,Education,43000,4
+F-0337,Entertainment/public assembly,22334,1
+F-0338,Entertainment/public assembly,23803,1
+F-0339,Education,71100,4
+F-0340,Entertainment/public assembly,1843,1
+F-0341,Education,158000,4
+F-0342,Lodging/residential,15420,7
+F-0343,Public services,22000,1
+F-0344,Education,77500,4
+F-0345,Lodging/residential,7250,7
+F-0346,Entertainment/public assembly,17709,1
+F-0347,Education,75900,4
+F-0348,Public services,10577,1
+F-0349,Public services,45098,1
+F-0350,Education,83800,4
+F-0351,Education,58908,4
+F-0352,Education,144900,4
+F-0353,Education,99700,4
+F-0354,Education,77500,4
+F-0355,Education,182500,4
+F-0356,Public services,4336,1
+F-0357,Lodging/residential,2000,7
+F-0358,Education,77700,4
+F-0359,Public services,4925,1
+F-0360,Education,69600,4
+F-0361,Public services,13224,1
+F-0362,Public services,21368,1
+F-0363,Education,69300,4
+F-0364,Education,83800,4
+F-0365,Healthcare,819577,1
+F-0366,Public services,9941,1
+F-0367,Entertainment/public assembly,20584,1
+F-0368,Retail,16500,1
+F-0369,Public services,6431,1
+F-0370,Entertainment/public assembly,15960,1
+F-0371,Entertainment/public assembly,5554,1
+F-0372,Education,49100,4
+F-0373,Education,46484,4
+F-0374,Lodging/residential,350000,7
+F-0375,Office,850354,2
+F-0376,Office,585955,2
+F-0377,Public services,12506,1
+F-0378,Public services,35241,1
+F-0379,Entertainment/public assembly,7675,1
+F-0380,Education,95100,4
+F-0381,Entertainment/public assembly,1858,1
+F-0382,Education,47984,4
+F-0383,Warehouse/storage,27318,1
+F-0384,Office,13728,2
+F-0385,Public services,18432,1
+F-0386,Entertainment/public assembly,17262,1
+F-0387,Education,104200,4
+F-0388,Public services,30810,1
+F-0389,Education,57165,4
+F-0390,Office,34400,2
+F-0391,Education,87107,4
+F-0392,Education,53000,4
+F-0393,Education,59400,4
+F-0394,Entertainment/public assembly,3545,1
+F-0395,Public services,8925,1
+F-0396,Public services,16768,1
+F-0397,Public services,54061,1
+F-0398,Education,62200,4
+F-0399,Education,180000,4
+F-0400,Public services,19315,1
+F-0401,Entertainment/public assembly,12660,1
+F-0402,Public services,2818,1
+F-0403,Education,49500,4
+F-0404,Public services,5783,1
+F-0405,Education,82200,4
+F-0406,Entertainment/public assembly,2347,1
+F-0407,Education,325217,4
+F-0408,Entertainment/public assembly,16098,1
+F-0409,Education,38500,4
+F-0410,Education,64113,4
+F-0411,Entertainment/public assembly,6139,1
+F-0412,Education,110000,4
+F-0413,Warehouse/storage,14839,1
+F-0414,Entertainment/public assembly,36387,1
+F-0415,Education,41329,4
+F-0416,Public services,7079,1
+F-0417,Education,69600,4
+F-0418,Entertainment/public assembly,86120,1
+F-0419,Education,271300,4
+F-0420,Public services,81397,1
+F-0421,Entertainment/public assembly,11274,1
+F-0422,Public services,8726,1
+F-0423,Entertainment/public assembly,969,1
+F-0424,Public services,32527,1
+F-0425,Warehouse/storage,202829,1
+F-0426,Education,101400,4
+F-0427,Public services,14269,1
+F-0428,Entertainment/public assembly,1396,1
+F-0429,Public services,11934,1
+F-0430,Public services,23918,1
+F-0431,Parking,1760,2
+F-0432,Public services,103200,1
+F-0433,Entertainment/public assembly,23055,1
+F-0434,Education,39500,4
+F-0435,Office,29916,2
+F-0436,Lodging/residential,15574,7
+F-0437,Entertainment/public assembly,11651,1
+F-0438,Public services,36562,1
+F-0439,Office,62205,2
+F-0440,Public services,35033,1
+F-0441,Public services,3267,1
+F-0442,Education,70800,4
+F-0443,Education,109000,4
+F-0444,Public services,12945,1
+F-0445,Education,40950,4
+F-0446,Public services,43992,1
+F-0447,Public services,21472,1
+F-0448,Office,328760,2
+F-0449,Lodging/residential,18340,7
+F-0450,Education,116872,4
+F-0451,Entertainment/public assembly,5013,1
+F-0452,Education,155100,4
+F-0453,Public services,24875,1
+F-0454,Public services,16576,1
+F-0455,Healthcare,29192,1
+F-0456,Public services,14125,1
+F-0457,Education,79700,4
+F-0458,Entertainment/public assembly,4589,1
+F-0459,Entertainment/public assembly,36744,1
+F-0460,Public services,17927,1
+F-0461,Education,69400,4
+F-0462,Public services,9226,1
+F-0463,Public services,25000,1
+F-0464,Public services,9816,1
+F-0465,Office,6400,2
+F-0466,Public services,22500,1
+F-0467,Public services,47439,1
+F-0468,Office,40000,2
+F-0469,Public services,13044,1
+F-0470,Public services,24618,1
+F-0471,Education,170000,4
+F-0472,Education,69400,4
+F-0473,Public services,46007,1
+F-0474,Public services,10151,1
+F-0475,Office,474680,2
+F-0476,Entertainment/public assembly,1102,1
+F-0477,Public services,21600,1
+F-0478,Lodging/residential,31283,7
+F-0479,Public services,43955,1
+F-0480,Office,30000,2
+F-0481,Education,104294,4
+F-0482,Education,394000,4
+F-0483,Education,207000,4
+F-0484,Public services,18000,1
+F-0485,Public services,22000,1
+F-0486,Education,86375,4
+F-0487,Education,66600,4
+F-0488,Education,69600,4
+F-0489,Education,85039,4
+F-0490,Education,98900,4
+F-0491,Education,66600,4
+F-0492,Education,193800,4
+F-0493,Education,283000,4
+F-0494,Education,72800,4
+F-0495,Education,47500,4
+F-0496,Public services,16200,1
+F-0497,Public services,7732,1
+F-0498,Entertainment/public assembly,14842,1
+F-0499,Education,376507,4
+F-0500,Education,99975,4
+F-0501,Education,66404,4
+F-0502,Public services,6010,1
+F-0503,Other,10762,1
+F-0504,Warehouse/storage,112536,1
+F-0505,Warehouse/storage,51622,1
+F-0506,Other,34400,1
+F-0507,Education,61151,4
+F-0508,Other,112283,1
+F-0509,Other,10578,1
+F-0510,Public services,4581,1
+F-0511,Public services,12316,1
+F-0512,Lodging/residential,5000,7
+F-0513,Public services,112283,1
+F-0514,Public services,12750,1
+F-0515,Education,63900,4
+F-0516,Public services,9000,1
+F-0517,Lodging/residential,2210,7
+F-0518,Public services,555243,1
+F-0519,Public services,461647,1
+F-0520,Office,27600,2
+F-0521,Public services,12000,1
+F-0522,Office,8000,2
+F-0523,Entertainment/public assembly,9726,1
+F-0524,Public services,134114,1
+F-0525,Public services,9062,1
+F-0526,Public services,7636,1
+F-0527,Public services,9392,1
+F-0528,Public services,11143,1
+F-0529,Public services,14519,1
+F-0530,Public services,144000,1
+F-0531,Public services,68203,1
+F-0532,Entertainment/public assembly,7133,1
+F-0533,Lodging/residential,11900,7
+F-0534,Entertainment/public assembly,898,1
+F-0535,Healthcare,15000,1
+F-0536,Entertainment/public assembly,1962,1
+F-0537,Education,73200,4
+F-0538,Religious worship,10000,1
+F-0539,Entertainment/public assembly,1473,1
+F-0540,Education,88300,4
+F-0541,Lodging/residential,2582,7
+F-0542,Education,66900,4
+F-0543,Entertainment/public assembly,801,1
+F-0544,Public services,110800,1
+F-0545,Education,21903,4
+F-0546,Public services,400000,1
+F-0547,Healthcare,23903,1
+F-0548,Healthcare,9813,1
+F-0549,Public services,12754,1
+F-0550,Public services,16000,1
+F-0551,Office,30525,2
+F-0552,Public services,20110,1
+F-0553,Education,37800,4
+F-0554,Entertainment/public assembly,26187,1
+F-0555,Education,22400,4
+F-0556,Healthcare,450000,1
+F-0557,Public services,19000,1
+F-0558,Office,89315,2
+F-0559,Education,48994,4
+F-0560,Office,340000,2
+F-0561,Office,295000,2
+F-0562,Education,235000,4
+F-0563,Office,31346,2
+F-0564,Public services,89315,1
+F-0565,Education,15326,2
+F-0566,Education,2010,1
+F-0567,Entertainment/public assembly,82670,4
+F-0568,Education,14150,2
+F-0569,Education,86091,8
+F-0570,Education,193202,10
+F-0571,Education,47954,3
+F-0572,Education,94175,9
+F-0573,Education,23815,4
+F-0574,Education,56343,4
+F-0575,Technology/science,33167,4
+F-0576,Education,86465,7
+F-0577,Education,113589,3
+F-0578,Lodging/residential,71994,4
+F-0579,Education,7781,4
+F-0580,Education,104016,4
+F-0581,Lodging/residential,23012,3
+F-0582,Education,14542,4
+F-0583,Education,206054,9
+F-0584,Education,137806,8
+F-0585,Public services,132394,7
+F-0586,Public services,166514,5
+F-0587,Technology/science,53234,5
+F-0588,Education,21866,4
+F-0589,Education,305268,8
+F-0590,Education,8516,2
+F-0591,Entertainment/public assembly,59326,1
+F-0592,Education,120694,7
+F-0593,Education,66203,6
+F-0594,Education,177281,7
+F-0595,Education,270413,14
+F-0596,Education,18474,4
+F-0597,Public services,189425,4
+F-0598,Public services,68701,4
+F-0599,Education,25996,4
+F-0600,Education,44182,5
+F-0601,Entertainment/public assembly,11910,2
+F-0602,Entertainment/public assembly,238065,6
+F-0603,Public services,29063,3
+F-0604,Education,8463,3
+F-0605,Education,51020,5
+F-0606,Utility,23432,2
+F-0607,Education,34825,2
+F-0608,Entertainment/public assembly,124197,3
+F-0609,Education,141461,6
+F-0610,Entertainment/public assembly,30160,4
+F-0611,Education,128126,7
+F-0612,Education,77055,4
+F-0613,Entertainment/public assembly,1305,1
+F-0614,Lodging/residential,185200,8
+F-0615,Education,153700,7
+F-0616,Education,117814,6
+F-0617,Education,182943,11
+F-0618,Education,148032,5
+F-0619,Education,68146,6
+F-0620,Education,220703,9
+F-0621,Parking,387,1
+F-0622,Education,123612,7
+F-0623,Education,49388,6
+F-0624,Education,46204,5
+F-0625,Education,55516,5
+F-0626,Public services,130581,5
+F-0627,Education,56637,5
+F-0628,Education,40706,3
+F-0629,Education,40835,6
+F-0630,Education,93420,5
+F-0631,Education,23533,3
+F-0632,Education,41297,6
+F-0633,Parking,98539,2
+F-0634,Education,4000,4
+F-0635,Education,7122,3
+F-0636,Education,6564,3
+F-0637,Education,4189,3
+F-0638,Education,7900,4
+F-0639,Education,14524,2
+F-0640,Entertainment/public assembly,36180,9
+F-0641,Education,109588,8
+F-0642,Education,30401,4
+F-0643,Education,110919,6
+F-0644,Entertainment/public assembly,261091,3
+F-0645,Education,304333,12
+F-0646,Education,58733,6
+F-0647,Lodging/residential,86959,5
+F-0648,Education,154706,11
+F-0649,Education,116121,10
+F-0650,Education,75228,4
+F-0651,Parking,306140,5
+F-0652,Education,150887,9
+F-0653,Education,420885,8
+F-0654,Education,43910,5
+F-0655,Education,222434,11
+F-0656,Other,5769,1
+F-0657,Education,109071,3
+F-0658,Entertainment/public assembly,31075,2
+F-0659,Entertainment/public assembly,15306,2
+F-0660,Entertainment/public assembly,5447,1
+F-0661,Entertainment/public assembly,7427,2
+F-0662,Entertainment/public assembly,12777,2
+F-0663,Entertainment/public assembly,57189,2
+F-0664,Entertainment/public assembly,49492,2
+F-0665,Entertainment/public assembly,8773,1
+F-0666,Entertainment/public assembly,12045,1
+F-0667,Entertainment/public assembly,15715,2
+F-0668,Entertainment/public assembly,47275,2
+F-0669,Entertainment/public assembly,4768,1
+F-0670,Healthcare,18471,1
+F-0671,Lodging/residential,7589,3
+F-0672,Manufacturing/industrial,6329,2
+F-0673,Entertainment/public assembly,36307,2
+F-0674,Entertainment/public assembly,149704,8
+F-0675,Manufacturing/industrial,3853,1
+F-0676,Manufacturing/industrial,90697,2
+F-0677,Public services,7072,2
+F-0678,Public services,60977,6
+F-0679,Public services,43400,3
+F-0680,Public services,9849,2
+F-0681,Public services,41861,3
+F-0682,Entertainment/public assembly,64153,5
+F-0683,Office,4650,2
+F-0684,Office,152471,3
+F-0685,Office,270034,5
+F-0686,Office,12206,2
+F-0687,Office,36221,4
+F-0688,Office,52302,2
+F-0689,Office,11442,1
+F-0690,Office,19429,2
+F-0691,Office,42647,1
+F-0692,Office,7416,2
+F-0693,Office,57436,3
+F-0694,Education,30613,4
+F-0695,Education,121062,3
+F-0696,Education,19041,2
+F-0697,Education,18697,2
+F-0698,Education,13939,1
+F-0699,Education,93764,3
+F-0700,Education,11464,1
+F-0701,Education,128682,4
+F-0702,Education,24251,2
+F-0703,Education,34563,1
+F-0704,Education,17050,1
+F-0705,Education,23605,1
+F-0706,Education,27685,2
+F-0707,Education,11270,1
+F-0708,Education,102429,4
+F-0709,Education,23067,2
+F-0710,Education,12088,4
+F-0711,Education,15414,1
+F-0712,Education,22949,1
+F-0713,Education,14973,2
+F-0714,Education,8730,1
+F-0715,Education,23153,2
+F-0716,Education,37265,3
+F-0717,Education,28826,2
+F-0718,Education,25866,2
+F-0719,Education,28363,2
+F-0720,Education,18202,2
+F-0721,Education,121471,3
+F-0722,Education,31635,3
+F-0723,Education,160038,4
+F-0724,Education,88856,2
+F-0725,Education,13789,1
+F-0726,Education,120566,2
+F-0727,Education,139113,3
+F-0728,Education,30300,2
+F-0729,Education,17190,2
+F-0730,Education,126045,4
+F-0731,Education,29149,2
+F-0732,Education,66187,1
+F-0733,Education,96929,3
+F-0734,Education,28191,1
+F-0735,Education,155807,2
+F-0736,Education,94658,3
+F-0737,Education,14790,1
+F-0738,Education,95433,4
+F-0739,Education,137046,2
+F-0740,Education,37975,1
+F-0741,Education,14025,1
+F-0742,Entertainment/public assembly,31829,2
+F-0743,Entertainment/public assembly,12185,2
+F-0744,Entertainment/public assembly,48642,5
+F-0745,Education,13512,4
+F-0746,Office,17879,2
+F-0747,Education,30531,4
+F-0748,Office,32766,2
+F-0749,Lodging/residential,35936,7
+F-0750,Education,35990,4
+F-0751,Office,37485,2
+F-0752,Public services,38671,1
+F-0753,Education,39558,4
+F-0754,Office,41337,2
+F-0755,Office,42129,2
+F-0756,Lodging/residential,44352,7
+F-0757,Education,46813,4
+F-0758,Lodging/residential,47007,7
+F-0759,Lodging/residential,48519,7
+F-0760,Office,49990,2
+F-0761,Entertainment/public assembly,52534,1
+F-0762,Education,53651,4
+F-0763,Office,54597,2
+F-0764,Education,58307,4
+F-0765,Entertainment/public assembly,58562,1
+F-0766,Office,64818,2
+F-0767,Office,70042,2
+F-0768,Education,75929,4
+F-0769,Education,77263,4
+F-0770,Education,80325,4
+F-0771,Lodging/residential,82911,7
+F-0772,Lodging/residential,87661,7
+F-0773,Lodging/residential,93313,7
+F-0774,Lodging/residential,93500,7
+F-0775,Office,104355,2
+F-0776,Office,104667,2
+F-0777,Lodging/residential,105791,7
+F-0778,Entertainment/public assembly,108339,1
+F-0779,Lodging/residential,113000,7
+F-0780,Education,120836,4
+F-0781,Lodging/residential,128044,7
+F-0782,Education,129344,4
+F-0783,Entertainment/public assembly,143110,1
+F-0784,Education,190817,4
+F-0785,Education,250000,4
+F-0786,Education,257000,4
+F-0787,Lodging/residential,278795,7
+F-0788,Public services,401753,1
+F-0789,Education,64583,1
+F-0790,Education,86111,8
+F-0791,Education,150695,5
+F-0792,Education,333681,3
+F-0793,Education,150695,6
+F-0794,Education,731945,11
+F-0795,Education,387500,6
+F-0796,Education,226042,2
+F-0797,Education,764237,13
+F-0798,Education,409028,21
+F-0799,Education,527431,26
+F-0800,Education,64583,2
+F-0801,Education,484376,5
+F-0802,Education,290625,19
+F-0803,Education,182986,3
+F-0804,Office,175618,1
+F-0805,Entertainment/public assembly,3200,1
+F-0806,Other,28693,2
+F-0807,Entertainment/public assembly,3000,1
+F-0808,Other,9357,1
+F-0809,Entertainment/public assembly,520,1
+F-0810,Entertainment/public assembly,3729,1
+F-0811,Public services,4848,1
+F-0812,Entertainment/public assembly,9894,1
+F-0813,Public services,5630,1
+F-0814,Public services,4371,1
+F-0815,Entertainment/public assembly,666,1
+F-0816,Entertainment/public assembly,356,1
+F-0817,Entertainment/public assembly,984,1
+F-0818,Public services,3648,1
+F-0819,Public services,6351,1
+F-0820,Entertainment/public assembly,648,1
+F-0821,Other,2555,1
+F-0822,Entertainment/public assembly,366,1
+F-0823,Public services,35253,1
+F-0824,Public services,7820,1
+F-0825,Public services,3592,1
+F-0826,Public services,19446,1
+F-0827,Office,5839,1
+F-0828,Other,102994,1
+F-0829,Warehouse/storage,15879,1
+F-0830,Warehouse/storage,15120,1
+F-0831,Entertainment/public assembly,4065,1
+F-0832,Public services,26507,1
+F-0833,Public services,6392,1
+F-0834,Public services,4934,1
+F-0835,Entertainment/public assembly,17220,1
+F-0836,Public services,8168,1
+F-0837,Public services,33246,1
+F-0838,Public services,18414,1
+F-0839,Office,14150,1
+F-0840,Other,41861,1
+F-0841,Office,5680,1
+F-0842,Public services,7292,1
+F-0843,Entertainment/public assembly,5380,1
+F-0844,Entertainment/public assembly,6944,1
+F-0845,Entertainment/public assembly,860,1
+F-0846,Entertainment/public assembly,481,1
+F-0847,Entertainment/public assembly,9303,1
+F-0848,Office,8552,1
+F-0849,Public services,6448,1
+F-0850,Public services,28590,1
+F-0851,Public services,16682,1
+F-0852,Public services,10800,1
+F-0853,Entertainment/public assembly,26495,1
+F-0854,Entertainment/public assembly,92288,1
+F-0855,Office,48300,1
+F-0856,Entertainment/public assembly,2956,1
+F-0857,Entertainment/public assembly,4000,1
+F-0858,Other,1566,1
+F-0859,Public services,4000,1
+F-0860,Other,12259,1
+F-0861,Other,4276,1
+F-0862,Other,27640,1
+F-0863,Public services,19823,1
+F-0864,Public services,16584,1
+F-0865,Public services,10174,1
+F-0866,Public services,10174,1
+F-0867,Public services,65913,1
+F-0868,Public services,60000,1
+F-0869,Entertainment/public assembly,875000,1
+F-0870,Entertainment/public assembly,755,1
+F-0871,Entertainment/public assembly,1536,1
+F-0872,Public services,3627,1
+F-0873,Office,40142,1
+F-0874,Office,181805,2
+F-0875,Lodging/residential,177708,7
+F-0876,Education,55240,4
+F-0877,Office,8004,2
+F-0878,Lodging/residential,41241,7
+F-0879,Education,110235,4
+F-0880,Education,157723,4
+F-0881,Entertainment/public assembly,344798,1
+F-0882,Education,39143,4
+F-0883,Education,399331,4
+F-0884,Education,38598,4
+F-0885,Lodging/residential,40697,7
+F-0886,Education,69799,4
+F-0887,Lodging/residential,69754,7
+F-0888,Entertainment/public assembly,137522,1
+F-0889,Education,126077,4
+F-0890,Education,202937,4
+F-0891,Education,50846,4
+F-0892,Services,481999,1
+F-0893,Education,47191,4
+F-0894,Education,101555,4
+F-0895,Education,55087,4
+F-0896,Education,245637,4
+F-0897,Education,37775,4
+F-0898,Public services,64749,1
+F-0899,Education,225014,4
+F-0900,Education,111623,4
+F-0901,Education,107730,4
+F-0902,Education,14561,4
+F-0903,Education,275793,4
+F-0904,Education,29961,4
+F-0905,Lodging/residential,39648,7
+F-0906,Lodging/residential,39649,7
+F-0907,Entertainment/public assembly,44564,1
+F-0908,Education,91254,4
+F-0909,Entertainment/public assembly,66121,1
+F-0910,Office,60096,2
+F-0911,Education,239638,4
+F-0912,Education,52559,4
+F-0913,Entertainment/public assembly,503634,1
+F-0914,Education,229973,4
+F-0915,Education,205141,4
+F-0916,Education,51778,4
+F-0917,Education,237702,4
+F-0918,Education,60621,4
+F-0919,Education,31233,4
+F-0920,Education,85623,4
+F-0921,Entertainment/public assembly,262162,1
+F-0922,Education,147205,4
+F-0923,Education,24992,4
+F-0924,Entertainment/public assembly,252268,1
+F-0925,Education,54405,4
+F-0926,Education,26033,4
+F-0927,Lodging/residential,745671,7
+F-0928,Education,179115,4
+F-0929,Education,199628,4
+F-0930,Office,20917,2
+F-0931,Education,216050,4
+F-0932,Lodging/residential,233937,7
+F-0933,Office,8525,2
+F-0934,Entertainment/public assembly,170607,1
+F-0935,Office,16135,2
+F-0936,Lodging/residential,11350,7
+F-0937,Lodging/residential,10346,7
+F-0938,Lodging/residential,11227,7
+F-0939,Lodging/residential,8051,7
+F-0940,Lodging/residential,8079,7
+F-0941,Lodging/residential,8079,7
+F-0942,Lodging/residential,57334,7
+F-0943,Entertainment/public assembly,5682,1
+F-0944,Services,389641,1
+F-0945,Office,332447,2
+F-0946,Education,177216,4
+F-0947,Education,91629,4
+F-0948,Entertainment/public assembly,20372,1
+F-0949,Lodging/residential,86786,7
+F-0950,Entertainment/public assembly,16052,1
+F-0951,Office,103924,2
+F-0952,Education,218024,4
+F-0953,Entertainment/public assembly,563782,1
+F-0954,Education,305224,4
+F-0955,Education,198488,4
+F-0956,Office,86167,2
+F-0957,Education,111195,4
+F-0958,Entertainment/public assembly,234819,1
+F-0959,Education,128536,4
+F-0960,Education,56137,4
+F-0961,Education,155882,4
+F-0962,Public services,492898,1
+F-0963,Lodging/residential,44784,7
+F-0964,Education,130577,4
+F-0965,Lodging/residential,45086,7
+F-0966,Education,393530,4
+F-0967,Entertainment/public assembly,119262,1
+F-0968,Education,153999,4
+F-0969,Education,193723,4
+F-0970,Services,346056,1
+F-0971,Lodging/residential,301307,7
+F-0972,Education,282152,4
+F-0973,Office,193960,2
+F-0974,Education,186572,4
+F-0975,Entertainment/public assembly,426472,1
+F-0976,Education,59498,4
+F-0977,Office,8837,2
+F-0978,Education,258491,4
+F-0979,Entertainment/public assembly,52357,1
+F-0980,Entertainment/public assembly,34819,1
+F-0981,Education,167055,4
+F-0982,Services,373416,1
+F-0983,Entertainment/public assembly,122122,1
+F-0984,Services,214252,1
+F-0985,Office,34758,2
+F-0986,Office,34072,2
+F-0987,Education,166395,4
+F-0988,Office,24463,2
+F-0989,Education,168696,4
+F-0990,Office,82939,2
+F-0991,Education,57811,4
+F-0992,Office,51483,2
+F-0993,Education,428647,4
+F-0994,Education,108392,4
+F-0995,Education,46230,4
+F-0996,Education,77632,4
+F-0997,Office,38173,2
+F-0998,Education,173479,1
+F-0999,Education,113580,2
+F-1000,Education,121146,2
+F-1001,Other,4482,1
+F-1002,Entertainment/public assembly,161969,1
+F-1003,Education,94751,3
+F-1004,Education,74886,2
+F-1005,Office,26325,1
+F-1006,Office,26948,1
+F-1007,Office,41933,2
+F-1008,Education,74420,2
+F-1009,Education,21892,2
+F-1010,Office,11419,1
+F-1011,Education,65144,4
+F-1012,Education,23112,2
+F-1013,Education,67377,3
+F-1014,Office,43094,3
+F-1015,Other,4607,1
+F-1016,Other,10103,1
+F-1017,Technology/science,109263,6
+F-1018,Education,186840,2
+F-1019,Entertainment/public assembly,39788,5
+F-1020,Entertainment/public assembly,22101,2
+F-1021,Entertainment/public assembly,213762,2
+F-1022,Education,84346,2
+F-1023,Education,87976,2
+F-1024,Education,53855,2
+F-1025,Lodging/residential,52034,2
+F-1026,Lodging/residential,88480,1
+F-1027,Lodging/residential,35465,2
+F-1028,Education,81390,4
+F-1029,Education,152559,4
+F-1030,Education,68030,4
+F-1031,Education,93206,4
+F-1032,Education,127632,4
+F-1033,Education,118489,4
+F-1034,Retail,3907,1
+F-1035,Office,14585,2
+F-1036,Office,54207,2
+F-1037,Education,8805,4
+F-1038,Technology/science,9838,5
+F-1039,Education,30171,3
+F-1040,Office,126960,2
+F-1041,Education,8073,4
+F-1042,Office,29547,2
+F-1043,Office,27889,2
+F-1044,Education,150673,4
+F-1045,Office,33530,2
+F-1046,Education,201350,4
+F-1047,Public services,252952,1
+F-1048,Education,275610,4
+F-1049,Education,94399,4
+F-1050,Office,50493,2
+F-1051,Education,28406,1
+F-1052,Retail,45305,2
+F-1053,Office,21582,2
+F-1054,Education,204998,4
+F-1055,Education,86714,4
+F-1056,Education,72958,4
+F-1057,Education,26372,4
+F-1058,Education,84346,4
+F-1059,Entertainment/public assembly,116186,1
+F-1060,Entertainment/public assembly,71806,1
+F-1061,Retail,44218,1
+F-1062,Education,65843,4
+F-1063,Education,58157,4
+F-1064,Education,131212,4
+F-1065,Office,12152,2
+F-1066,Education,55800,4
+F-1067,Education,125701,4
+F-1068,Education,112956,4
+F-1069,Office,20864,2
+F-1070,Lodging/residential,230747,7
+F-1071,Office,10385,2
+F-1072,Healthcare,305000,1
+F-1073,Office,194111,2
+F-1074,Office,89858,2
+F-1075,Office,72709,2
+F-1076,Lodging/residential,117054,7
+F-1077,Entertainment/public assembly,19454,1
+F-1078,Entertainment/public assembly,80438,1
+F-1079,Education,14185,4
+F-1080,Education,207115,4
+F-1081,Manufacturing/industrial,11470,2
+F-1082,Office,57394,2
+F-1083,Education,100813,4
+F-1084,Office,122922,2
+F-1085,Education,58377,4
+F-1086,Office,143973,2
+F-1087,Office,56569,2
+F-1088,Education,287594,4
+F-1089,Office,62837,2
+F-1090,Office,305047,2
+F-1091,Lodging/residential,233341,7
+F-1092,Office,105167,2
+F-1093,Office,47578,2
+F-1094,Office,70852,2
+F-1095,Education,32256,4
+F-1096,Parking,83772,2
+F-1097,Office,157545,2
+F-1098,Office,131745,2
+F-1099,Education,332884,4
+F-1100,Lodging/residential,174924,7
+F-1101,Office,71936,2
+F-1102,Office,87187,2
+F-1103,Other,23903,1
+F-1104,Public services,199722,1
+F-1105,Food sales and service,33215,1
+F-1106,Office,92099,2
+F-1107,Education,184098,4
+F-1108,Parking,679614,2
+F-1109,Office,102191,2
+F-1110,Office,27145,2
+F-1111,Office,67839,2
+F-1112,Office,190471,2
+F-1113,Office,33401,2
+F-1114,Other,64810,1
+F-1115,Services,42028,1
+F-1116,Services,11681,1
+F-1117,Office,111424,2
+F-1118,Services,26926,1
+F-1119,Office,119509,2
+F-1120,Services,70040,1
+F-1121,Education,85732,4
+F-1122,Office,84365,2
+F-1123,Office,92994,2
+F-1124,Lodging/residential,153299,7
+F-1125,Parking,271492,2
+F-1126,Education,72332,4
+F-1127,Office,87131,2
+F-1128,Office,58703,2
+F-1129,Office,133100,2
+F-1130,Education,280225,4
+F-1131,Office,25463,2
+F-1132,Office,103926,2
+F-1133,Office,82302,2
+F-1134,Office,152946,2
+F-1135,Education,150393,4
+F-1136,Office,79782,2
+F-1137,Office,27452,2
+F-1138,Education,39988,4
+F-1139,Office,336650,2
+F-1140,Education,156483,4
+F-1141,Parking,20986,2
+F-1142,Office,103718,2
+F-1143,Office,96612,2
+F-1144,Office,152312,2
+F-1145,Manufacturing/industrial,35201,2
+F-1146,Public services,83155,1
+F-1147,Entertainment/public assembly,234476,1
+F-1148,Office,861524,2
+F-1149,Office,293990,2
+F-1150,Office,196043,2
+F-1151,Office,267536,2
+F-1152,Office,118858,2
+F-1153,Technology/science,89456,5
+F-1154,Lodging/residential,262156,7
+F-1155,Warehouse/storage,19059,1
+F-1156,Education,259989,4
+F-1157,Education,37107,4
+F-1158,Public services,294812,1
+F-1159,Office,671507,2
+F-1160,Office,80205,2
+F-1161,Office,53077,2
+F-1162,Office,72958,2
+F-1163,Parking,83919,2
+F-1164,Office,249457,2
+F-1165,Office,28991,2
+F-1166,Office,63771,2
+F-1167,Office,52748,2
+F-1168,Office,577101,2
+F-1169,Education,155439,4
+F-1170,Office,59476,2
+F-1171,Manufacturing/industrial,56851,2
+F-1172,Manufacturing/industrial,63847,2
+F-1173,Manufacturing/industrial,13091,2
+F-1174,Other,27648,1
+F-1175,Manufacturing/industrial,81372,2
+F-1176,Education,142672,4
+F-1177,Office,20444,2
+F-1178,Education,133072,4
+F-1179,Entertainment/public assembly,143228,1
+F-1180,Education,95182,4
+F-1181,Education,60606,4
+F-1182,Warehouse/storage,66585,1
+F-1183,Entertainment/public assembly,166856,1
+F-1184,Lodging/residential,74584,7
+F-1185,Office,129532,2
+F-1186,Lodging/residential,157070,7
+F-1187,Office,121714,2
+F-1188,Office,37096,2
+F-1189,Office,98212,2
+F-1190,Office,39807,2
+F-1191,Education,192152,4
+F-1192,Office,43587,2
+F-1193,Office,106511,2
+F-1194,Office,35829,2
+F-1195,Office,16472,2
+F-1196,Entertainment/public assembly,57201,1
+F-1197,Services,50552,1
+F-1198,Education,85164,4
+F-1199,Warehouse/storage,10559,1
+F-1200,Entertainment/public assembly,545351,1
+F-1201,Education,73597,4
+F-1202,Office,16805,2
+F-1203,Lodging/residential,138602,7
+F-1204,Office,38382,2
+F-1205,Parking,178270,2
+F-1206,Office,99946,2
+F-1207,Healthcare,74443,1
+F-1208,Healthcare,121585,1
+F-1209,Healthcare,115788,1
+F-1210,Office,92500,2
+F-1211,Office,94988,2
+F-1212,Public services,237518,1
+F-1213,Warehouse/storage,39464,1
+F-1214,Office,195437,2
+F-1215,Parking,100328,2
+F-1216,Office,15269,2
+F-1217,Education,73044,4
+F-1218,Entertainment/public assembly,268480,1
+F-1219,Office,91316,2
+F-1220,Public services,381221,1
+F-1221,Office,29062,2
+F-1222,Lodging/residential,187174,7
+F-1223,Office,52141,2
+F-1224,Office,23481,2
+F-1225,Office,122746,2
+F-1226,Education,27995,4
+F-1227,Education,76903,4
+F-1228,Office,162549,2
+F-1229,Office,27646,2
+F-1230,Office,22524,2
+F-1231,Education,13220,4
+F-1232,Education,181328,4
+F-1233,Education,43143,4
+F-1234,Education,46037,4
+F-1235,Public services,278369,1
+F-1236,Office,61756,2
+F-1237,Office,42755,2
+F-1238,Office,129707,2
+F-1239,Office,31300,2
+F-1240,Public services,73277,1
+F-1241,Healthcare,194188,1
+F-1242,Office,23871,2
+F-1243,Healthcare,237704,1
+F-1244,Public services,95526,1
+F-1245,Healthcare,35354,1
+F-1246,Office,50327,2
+F-1247,Food sales and service,69876,1
+F-1248,Office,78002,2
+F-1249,Office,159384,2
+F-1250,Education,232139,4
+F-1251,Education,104604,4
+F-1252,Education,116249,4
+F-1253,Education,134748,4
+F-1254,Education,24979,4
+F-1255,Office,23702,2
+F-1256,Office,37917,2
+F-1257,Office,61274,2
+F-1258,Education,273234,4
+F-1259,Education,71088,4
+F-1260,Office,86455,2
+F-1261,Office,42942,2
+F-1262,Office,65000,2
+F-1263,Education,97838,4
+F-1264,Education,33012,4
+F-1265,Food sales and service,35605,1
+F-1266,Public services,13469,1
+F-1267,Education,138977,4
+F-1268,Office,43007,2
+F-1269,Healthcare,56388,1
+F-1270,Entertainment/public assembly,18551,1
+F-1271,Public services,20540,1
+F-1272,Public services,247471,1
+F-1273,Office,104089,2
+F-1274,Office,17077,2
+F-1275,Office,114166,2
+F-1276,Office,53860,2
+F-1277,Office,45240,2
+F-1278,Education,79949,4
+F-1279,Office,64743,2
+F-1280,Lodging/residential,79900,7
+F-1281,Office,103138,2
+F-1282,Healthcare,12500,1
+F-1283,Public services,76537,1
+F-1284,Education,442438,4
+F-1285,Healthcare,130067,1
+F-1286,Healthcare,205472,1
+F-1287,Education,60582,4
+F-1288,Education,164206,4
+F-1289,Education,194441,4
+F-1290,Education,200442,4
+F-1291,Office,237546,2
+F-1292,Office,58196,2
+F-1293,Office,51471,2
+F-1294,Office,15649,2
+F-1295,Office,115676,2
+F-1296,Office,8836,2
+F-1297,Office,21469,2
+F-1298,Education,171084,4
+F-1299,Education,25401,4
+F-1300,Healthcare,25609,1
+F-1301,Education,62242,4
+F-1302,Office,90411,2
+F-1303,Healthcare,200000,1
+F-1304,Office,91363,2
+F-1305,Lodging/residential,37803,7
+F-1306,Lodging/residential,54172,7
+F-1307,Lodging/residential,66013,7
+F-1308,Lodging/residential,62279,7
+F-1309,Lodging/residential,58041,7
+F-1310,Lodging/residential,57274,7
+F-1311,Lodging/residential,66794,7
+F-1312,Lodging/residential,75000,7
+F-1313,Healthcare,68637,1
+F-1314,Education,73813,4
+F-1315,Entertainment/public assembly,82789,1
+F-1316,Entertainment/public assembly,49975,1
+F-1317,Entertainment/public assembly,180806,1
+F-1318,Entertainment/public assembly,73488,1
+F-1319,Entertainment/public assembly,287419,1
+F-1320,Entertainment/public assembly,34565,1
+F-1321,Entertainment/public assembly,370024,1
+F-1322,Entertainment/public assembly,166489,1
+F-1323,Office,87200,2
+F-1324,Entertainment/public assembly,84688,1
+F-1325,Entertainment/public assembly,155177,1
+F-1326,Office,46981,2
+F-1327,Education,98125,4
+F-1328,Education,279840,4
+F-1329,Technology/science,60100,5
+F-1330,Education,173983,4
+F-1331,Education,171008,4
+F-1332,Education,47398,4
+F-1333,Office,31316,2
+F-1334,Office,130794,2
+F-1335,Public services,136817,1
+F-1336,Office,31053,2
+F-1337,Office,14744,2
+F-1338,Education,31415,4
+F-1339,Education,140488,4
+F-1340,Manufacturing/industrial,111518,2
+F-1341,Education,18342,4
+F-1342,Education,116854,4
+F-1343,Office,110380,2
+F-1344,Education,125507,4
+F-1345,Education,20889,4
+F-1346,Education,34875,4
+F-1347,Education,322341,4
+F-1348,Education,131271,4
+F-1349,Manufacturing/industrial,7919,2
+F-1350,Education,149762,4
+F-1351,Office,40611,2
+F-1352,Office,42755,2
+F-1353,Religious worship,22201,1
+F-1354,Education,23232,4
+F-1355,Education,50567,4
+F-1356,Education,91253,4
+F-1357,Office,21618,2
+F-1358,Lodging/residential,61439,7
+F-1359,Education,124289,4
+F-1360,Entertainment/public assembly,111530,1
+F-1361,Education,233863,4
+F-1362,Education,113988,4
+F-1363,Office,157933,2
+F-1364,Utility,74922,2
+F-1365,Lodging/residential,129664,7
+F-1366,Office,87977,2
+F-1367,Education,33695,4
+F-1368,Entertainment/public assembly,199037,1
+F-1369,Entertainment/public assembly,53194,1
+F-1370,Education,4773,4
+F-1371,Public services,50577,1
+F-1372,Education,16289,4
+F-1373,Education,105434,4
+F-1374,Office,159662,2
+F-1375,Office,115288,2
+F-1376,Public services,240026,1
+F-1377,Education,74599,4
+F-1378,Education,214505,4
+F-1379,Office,49553,2
+F-1380,Education,204029,4
+F-1381,Office,84615,2
+F-1382,Public services,243072,1
+F-1383,Education,105612,4
+F-1384,Education,56969,4
+F-1385,Education,124521,4
+F-1386,Entertainment/public assembly,82035,1
+F-1387,Office,187041,2
+F-1388,Healthcare,45465,1
+F-1389,Entertainment/public assembly,17104,1
+F-1390,Entertainment/public assembly,93608,1
+F-1391,Entertainment/public assembly,68693,1
+F-1392,Entertainment/public assembly,76153,1
+F-1393,Entertainment/public assembly,151900,1
+F-1394,Entertainment/public assembly,16351,1
+F-1395,Lodging/residential,98624,7
+F-1396,Lodging/residential,96336,7
+F-1397,Lodging/residential,19984,7
+F-1398,Lodging/residential,20291,7
+F-1399,Lodging/residential,166814,7
+F-1400,Lodging/residential,21168,7
+F-1401,Lodging/residential,168791,7
+F-1402,Lodging/residential,133594,7
+F-1403,Lodging/residential,78438,7
+F-1404,Lodging/residential,169290,7
+F-1405,Lodging/residential,142901,7
+F-1406,Lodging/residential,136522,7
+F-1407,Lodging/residential,83141,7
+F-1408,Entertainment/public assembly,28760,1
+F-1409,Lodging/residential,48881,7
+F-1410,Office,11524,2
+F-1411,Education,9111,4
+F-1412,Lodging/residential,39538,7
+F-1413,Lodging/residential,65999,7
+F-1414,Lodging/residential,65663,7
+F-1415,Lodging/residential,40492,7
+F-1416,Lodging/residential,41236,7
+F-1417,Lodging/residential,40451,7
+F-1418,Lodging/residential,41302,7
+F-1419,Lodging/residential,40629,7
+F-1420,Entertainment/public assembly,95079,1
+F-1421,Education,47934,4
+F-1422,Lodging/residential,19876,7
+F-1423,Lodging/residential,18277,7
+F-1424,Lodging/residential,24103,7
+F-1425,Utility,4071,2
+F-1426,Entertainment/public assembly,15450,1
+F-1427,Education,180625,4
+F-1428,Education,28432,4
+F-1429,Education,40461,4
+F-1430,Office,53303,2
+F-1431,Public services,111360,1
+F-1432,Education,160673,4
+F-1433,Education,28084,4
+F-1434,Education,33148,4
+F-1435,Education,9552,4
+F-1436,Manufacturing/industrial,11302,2
+F-1437,Education,111518,4
+F-1438,Education,108971,4
+F-1439,Education,56497,4
+F-1440,Lodging/residential,150294,7
+F-1441,Education,30143,4
+F-1442,Public services,99541,1
+F-1443,Education,40311,4
+F-1444,Entertainment/public assembly,19619,1
+F-1445,Education,4298,4
+F-1446,Entertainment/public assembly,11265,1
+F-1447,Lodging/residential,29775,7
+F-1448,Office,92271,2
