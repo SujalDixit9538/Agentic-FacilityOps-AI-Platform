@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from typing import Optional
 
 class AppSettings(BaseSettings):
     """
@@ -13,9 +14,13 @@ class AppSettings(BaseSettings):
     
     # Logging
     LOG_CONFIG_PATH: str = "config/logging.yaml"
+
+    GEMINI_API_KEY: Optional[str] = None
+    GROQ_API_KEY: Optional[str] = None
     
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 settings = AppSettings()

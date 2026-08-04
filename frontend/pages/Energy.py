@@ -40,7 +40,8 @@ if not is_online:
 
 status_info = health_data.get("data", {})
 if status_info.get("status") == "operational":
-    st.success(f"Energy Module Status: Operational | Intelligence Engine: {status_info.get('intelligence_engine', 'Pending')}")
+    st.success(f"Energy Module Status: Operational")
+    # st.success(f"Energy Module Status: Operational | Intelligence Engine: {status_info.get('intelligence_engine', 'Pending')}")
 
 st.divider()
 
