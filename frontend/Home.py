@@ -24,7 +24,7 @@ initialize_session()
 st.title("🏢 Agentic FacilityOPS AI Platform")
 st.markdown("### Executive Operations Center")
 
-# Integration Test: Fetch backend health (ETP-005)
+# Integration Test: Fetch backend health
 with st.spinner("Connecting to platform services..."):
     health_data = safe_get("/health", fallback_data={"status": "unreachable", "database": "unreachable"})
 
@@ -45,7 +45,7 @@ st.markdown(f"""
 * **Backend API:** {'🟢 Operational' if backend_online else '🔴 Offline'}
 * **Database Layer:** {'🟢 Operational' if db_operational else '🔴 Offline'}
 * **Frontend Interface:** 🟢 Operational
-* **Active Agents:** Initialization Pending (Milestone 1)
+* **Active Agents:** Energy Agent
 """)
 
 st.info("Please select a module from the sidebar navigation to begin.")
