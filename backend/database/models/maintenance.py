@@ -27,5 +27,16 @@ class MaintenanceLog(Base):
     technician = Column(String, nullable=True)
     status = Column(String, default="Pending") # Completed, Pending
     cost = Column(Float, nullable=True)
+    air_temp = Column(Float, nullable=True)
+    process_temp = Column(Float, nullable=True)
+    speed = Column(Float, nullable=True)
+    torque = Column(Float, nullable=True)
+    wear = Column(Float, nullable=True)
+
+    asset = relationship("Asset", back_populates="maintenance_logs")
+    process_temp = Column(Float, nullable=True)
+    speed = Column(Float, nullable=True)
+    torque = Column(Float, nullable=True)
+    wear = Column(Float, nullable=True)
 
     asset = relationship("Asset", back_populates="maintenance_logs")

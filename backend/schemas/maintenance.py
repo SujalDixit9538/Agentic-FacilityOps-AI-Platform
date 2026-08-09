@@ -22,7 +22,16 @@ class MaintenanceLogBase(BaseModel):
     technician: Optional[str] = None
     status: str = "Pending"
     cost: Optional[float] = None
+    air_temp: Optional[float] = None
+    process_temp: Optional[float] = None
+    speed: Optional[float] = None
+    torque: Optional[float] = None
+    wear: Optional[float] = None
 
+class MaintenanceLogResponse(MaintenanceLogBase):
+    log_id: str
+    class Config:
+        from_attributes = True
 class MaintenanceLogResponse(MaintenanceLogBase):
     log_id: str
     class Config:

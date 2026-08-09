@@ -42,8 +42,13 @@ class MaintenanceAgent:
                 "log_id": l.log_id,
                 "issue": l.issue,
                 "maintenance_date": l.maintenance_date.isoformat(),
-                "cost": l.cost
-            } for l in logs
+                "cost": l.cost,
+                "air_temp": l.air_temp,
+                "process_temp": l.process_temp,
+                "speed": l.speed,
+                "torque": l.torque,
+                "wear": l.wear
+            } for l in reversed(logs)
         ]
 
         # 3. Run rules-based health analysis

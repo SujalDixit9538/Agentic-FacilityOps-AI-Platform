@@ -8,3 +8,4 @@ env/
 logs/
 .ipynb_checkpoints/
 .cache/
+.continue/
