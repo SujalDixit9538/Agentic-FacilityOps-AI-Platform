@@ -15,6 +15,7 @@ from backend.database.connection import engine
 from backend.database.base import Base
 from backend.database.connection import SessionLocal
 from backend.services.mock_iot_service import seed_mock_energy_data
+import pandas as pd
 
 setup_logging()
 
@@ -69,8 +70,10 @@ async def initialize_default_data():
         
         # Seed Maintenance Data
         from backend.services.mock_maintenance_service import seed_mock_maintenance_data
-        seed_mock_maintenance_data(db, facility_id="FAC-001")
-        seed_mock_maintenance_data(db, facility_id="FAC-002")
+        facilities_df = pd.read_csv("data/processed_facilities.csv")
+        real_facility_ids = facilities_df["facility_id"].head(15).tolist()
+        for f_id in real_facility_ids:
+            seed_mock_maintenance_data(db, facility_id=f_id)
         
         # Seed Occupancy & Security Data
         from backend.services.mock_occupancy_service import seed_mock_occupancy_data

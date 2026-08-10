@@ -18,12 +18,23 @@ async def maintenance_module_health(db: Session = Depends(get_db)):
     return success_response(message="Maintenance module health check", data=status)
 
 @router.post("/seed")
-async def seed_maintenance_data(facility_id: str = Query("FAC-001"), db: Session = Depends(get_db)):
+async def seed_maintenance_data(facility_id: str = Query(None), db: Session = Depends(get_db)):
     """Triggers the mock asset and maintenance history pipeline."""
-    assets_count, logs_count = seed_mock_maintenance_data(db, facility_id=facility_id)
+    # If no facility_id provided, default to first in CSV
+    import pandas as pd
+    df = pd.read_csv("data/processed_facilities.csv")
+    
+    # If facility_id not provided, seed ALL facilities found in CSV
+    target_facilities = [facility_id] if facility_id else df["facility_id"].tolist()
+        
+    results = []
+    for f_id in target_facilities:
+        assets_count, logs_created = seed_mock_maintenance_data(db, facility_id=f_id)
+        results.append({"facility_id": f_id, "assets_seeded": assets_count, "logs_seeded": logs_created})
+        
     return success_response(
         message="Maintenance data pipeline executed.",
-        data={"facility_id": facility_id, "assets_seeded": assets_count, "logs_seeded": logs_count}
+        data=results
     )
 
 @router.get("/assets/{facility_id}")

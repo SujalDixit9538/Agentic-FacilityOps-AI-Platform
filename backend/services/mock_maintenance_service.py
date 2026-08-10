@@ -1,16 +1,16 @@
 import random
 from datetime import datetime, timedelta
 import logging
+import pandas as pd
 from sqlalchemy.orm import Session
 from backend.repositories.maintenance_repository import MaintenanceRepository
 from backend.schemas.maintenance import AssetBase, MaintenanceLogBase
 
 logger = logging.getLogger(__name__)
 
-def seed_mock_maintenance_data(db: Session, facility_id: str = "FAC-001"):
+def seed_mock_maintenance_data(db: Session, facility_id: str):
     """
-    Generates realistic assets and historical maintenance logs.
-    Satisfies ETP-011 data ingestion requirements.
+    Generates realistic assets and historical maintenance logs for a given facility.
     """
     repository = MaintenanceRepository(db)
     
@@ -47,8 +47,11 @@ def seed_mock_maintenance_data(db: Session, facility_id: str = "FAC-001"):
         db_asset = repository.create_asset(asset_data)
         assets_created += 1
         
-        # Generate 3 to 6 historical events so wear can accumulate over time.
-        num_logs = random.randint(2, 5)
+        # Identify if this asset should be "at-risk" (approx 20% chance)
+        is_at_risk = random.random() < 0.20
+        
+        # Generate 3 to 6 historical events
+        num_logs = random.randint(3, 6)
         event_offsets = sorted(
             random.sample(range(10, equip["age_days"] - 10), num_logs),
             reverse=True
@@ -67,16 +70,27 @@ def seed_mock_maintenance_data(db: Session, facility_id: str = "FAC-001"):
             
             issues = ["Filter Replacement", "Vibration Anomaly", "Calibration", "Lubrication", "Part Failure"]
             issue_selected = random.choice(issues)
-            
-            # Minor issues cost less, failures cost more
             cost = random.uniform(50.0, 300.0) if issue_selected != "Part Failure" else random.uniform(1000.0, 5000.0)
 
+            # Wear accumulation logic
             wear = asset_profile["wear_start"] + (log_index * asset_profile["wear_step"]) + random.uniform(0.0, 18.0)
-            strain = min(wear / 220.0, 1.4)
-            torque = asset_profile["torque_base"] + (strain * random.uniform(4.0, 8.0)) + random.uniform(-2.0, 2.0)
-            speed = asset_profile["speed_base"] - (strain * random.uniform(80.0, 180.0)) + random.uniform(-45.0, 45.0)
-            air_temp = asset_profile["air_temp_base"] + random.uniform(-1.8, 1.8)
-            process_temp = asset_profile["process_temp_base"] + (strain * random.uniform(1.5, 4.5)) + random.uniform(-1.2, 1.2)
+            
+            # Apply at-risk telemetry
+            if is_at_risk:
+                # Deliberately push into "at-risk" territory
+                # wear: 200+, torque: 55+, speed: < 1300
+                wear += 150.0 
+                torque = random.uniform(55.0, 70.0)
+                speed = random.uniform(1100.0, 1290.0)
+                air_temp = asset_profile["air_temp_base"] + random.uniform(2.0, 5.0)
+                process_temp = asset_profile["process_temp_base"] + random.uniform(5.0, 10.0)
+            else:
+                # Normal operation
+                strain = min(wear / 220.0, 1.4)
+                torque = asset_profile["torque_base"] + (strain * random.uniform(4.0, 8.0)) + random.uniform(-2.0, 2.0)
+                speed = asset_profile["speed_base"] - (strain * random.uniform(80.0, 180.0)) + random.uniform(-45.0, 45.0)
+                air_temp = asset_profile["air_temp_base"] + random.uniform(-1.8, 1.8)
+                process_temp = asset_profile["process_temp_base"] + (strain * random.uniform(1.5, 4.5)) + random.uniform(-1.2, 1.2)
             
             log_data = MaintenanceLogBase(
                 asset_id=db_asset.asset_id,
@@ -85,11 +99,11 @@ def seed_mock_maintenance_data(db: Session, facility_id: str = "FAC-001"):
                 technician=random.choice(["Tech A. Smith", "Tech B. Jones", "Ext. Contractor"]),
                 status="Completed",
                 cost=round(cost, 2),
-                air_temp=round(max(292.0, min(308.0, air_temp)), 2),
-                process_temp=round(max(302.0, min(320.0, process_temp)), 2),
-                speed=round(max(1200.0, min(1800.0, speed)), 2),
-                torque=round(max(30.0, min(55.0, torque)), 2),
-                wear=round(wear, 2)
+                air_temp=round(max(292.0, min(315.0, air_temp)), 2),
+                process_temp=round(max(302.0, min(330.0, process_temp)), 2),
+                speed=round(max(1000.0, min(1800.0, speed)), 2),
+                torque=round(max(20.0, min(75.0, torque)), 2),
+                wear=round(min(300.0, wear), 2)
             )
             repository.create_maintenance_log(log_data)
             logs_created += 1
