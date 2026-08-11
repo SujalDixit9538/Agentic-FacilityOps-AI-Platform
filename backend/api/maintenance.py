@@ -6,7 +6,9 @@ from backend.api.dependencies import get_db
 from backend.services.maintenance_service import MaintenanceService
 from backend.services.mock_maintenance_service import seed_mock_maintenance_data
 from backend.schemas.maintenance import AssetResponse, MaintenanceLogResponse
+from backend.schemas.manual_predict import ManualPredictRequest
 from backend.utils.api_responses import success_response
+from backend.agents.maintenance.analyzer import MaintenanceAnalyzer
 
 router = APIRouter()
 
@@ -76,3 +78,11 @@ async def analyze_asset(asset_id: str, db: Session = Depends(get_db)):
         message=f"Maintenance analysis completed for {asset_id}",
         data=insights
     )
+
+@router.post("/predict-manual")
+async def predict_manual(request: ManualPredictRequest):
+    """Predicts asset health based on manually entered sensor data."""
+    analyzer = MaintenanceAnalyzer()
+    features = request.dict()
+    result = analyzer.predict_features(features)
+    return success_response(message="Manual prediction complete", data=result)

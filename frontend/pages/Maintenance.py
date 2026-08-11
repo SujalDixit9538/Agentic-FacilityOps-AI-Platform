@@ -1,8 +1,12 @@
 import sys
+from pathlib import Path
+root_dir = str(Path(__file__).parent.parent.parent.absolute())
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
 import pandas as pd
 import streamlit as st
 from frontend.services.api_client import safe_get, safe_post
-from pathlib import Path
 from frontend.components.ui import (
     kpi_card,
     health_gauge,
@@ -12,10 +16,6 @@ from frontend.components.ui import (
     alert_feed
 )
 from frontend.utils.theme import COLORS
-
-root_dir = str(Path(__file__).parent.parent.parent.absolute())
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
 
 # Page Configuration
 st.set_page_config(page_title="Maintenance | FacilityOPS", layout="wide")
@@ -35,7 +35,7 @@ with st.sidebar:
     
     # Fetch facilities from backend
     resp = safe_get("/maintenance/facilities")
-    facilities = resp.get("data", {}).get("facilities", ["FAC-001", "FAC-002"])
+    facilities = resp.get("data", {}).get("facilities", ["F-0000", "F-0001"])
     
     seed_facility = st.selectbox("Target Facility", facilities, key="maint_seed_target")
 
@@ -96,9 +96,7 @@ else:
     
     # Sensor Simulator
     def run_prediction(inputs):
-        if df_assets.empty:
-            return {"health_score": 0, "failure_probability": 0}
-        res = safe_get(f"/maintenance/analyze/{df_assets.iloc[0]['asset_id']}")
+        res = safe_post("/maintenance/predict-manual", payload=inputs)
         data = res.get("data")
         return data if isinstance(data, dict) else {"health_score": 0, "failure_probability": 0}
         

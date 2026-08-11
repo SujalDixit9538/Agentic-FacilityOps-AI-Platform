@@ -18,7 +18,7 @@ GENERAL PAGE
 ******************************/
 
 .stApp{
-    background:#F4F6F9;
+    background:var(--background-color);
 }
 
 .block-container{
@@ -34,20 +34,20 @@ HEADINGS
 ******************************/
 
 h1,h2,h3{
-    color:#111827;
-    font-weight:600;
+    color:var(--text-color);
+    font-weight:800;
 }
 
 h1{
-    font-size:2rem;
+    font-size:2.2rem;
 }
 
 h2{
-    font-size:1.35rem;
+    font-size:1.5rem;
 }
 
 h3{
-    font-size:1rem;
+    font-size:1.15rem;
 }
 
 /******************************
@@ -56,8 +56,8 @@ CONTAINERS
 
 div[data-testid="stVerticalBlockBorderWrapper"]{
     border-radius:16px;
-    border:1px solid #E5E7EB;
-    background:white;
+    border:1px solid var(--secondary-background-color);
+    background:var(--secondary-background-color);
 }
 
 /******************************
@@ -66,9 +66,9 @@ METRICS
 
 div[data-testid="metric-container"]{
 
-    background:white;
+    background:var(--secondary-background-color);
 
-    border:1px solid #E5E7EB;
+    border:1px solid var(--secondary-background-color);
 
     border-radius:14px;
 
@@ -124,11 +124,11 @@ PLOTLY
 
 .js-plotly-plot{
 
-    border:1px solid #E5E7EB;
+    border:1px solid var(--secondary-background-color);
 
     border-radius:14px;
 
-    background:white;
+    background:var(--secondary-background-color);
 
     padding:8px;
 
@@ -140,9 +140,9 @@ SIDEBAR
 
 section[data-testid="stSidebar"]{
 
-    background:#FFFFFF;
+    background:var(--secondary-background-color);
 
-    border-right:1px solid #E5E7EB;
+    border-right:1px solid var(--secondary-background-color);
 }
 
 /******************************
@@ -153,7 +153,7 @@ div[data-testid="stDataFrame"]{
 
     border-radius:14px;
 
-    border:1px solid #E5E7EB;
+    border:1px solid var(--secondary-background-color);
 
 }
 
@@ -180,9 +180,9 @@ hr{
 
 .kpi-card{
 
-    background:white;
+    background:var(--secondary-background-color);
 
-    border:1px solid #E5E7EB;
+    border:1px solid var(--secondary-background-color);
 
     border-radius:16px;
 
@@ -222,7 +222,7 @@ hr{
 
     font-weight:700;
 
-    color:#111827;
+    color:var(--text-color);
 
     margin-top:12px;
 
@@ -260,6 +260,39 @@ hr{
 
     font-weight:600;
 
+}
+
+/* IMPROVED TEXT VISIBILITY */
+.stMarkdown p,
+.stMarkdown li,
+.stMarkdown div,
+.stMarkdown span,
+.stMarkdown h1,
+.stMarkdown h2,
+.stMarkdown h3,
+.stTextInput label,
+.stSelectbox label,
+.stCheckbox label,
+.stRadio label,
+[data-testid="stMetricValue"] {
+    font-weight: 800 !important;
+    color: var(--text-color) !important;
+}
+
+.stMetric [data-testid="stMetricLabel"] {
+    font-weight: 800 !important;
+    color: #1e293b !important;
+}
+
+.page-title .eyebrow {
+    font-weight: 700 !important;
+    letter-spacing: 0.12em;
+    color: #475569;
+}
+
+.page-title .title {
+    font-weight: 800 !important;
+    color: var(--text-color);
 }
 
 </style>
@@ -327,12 +360,12 @@ from datetime import datetime
 
 st.markdown("""
 <style>
-.dashboard-header{ background:white; border:1px solid #E5E7EB; border-radius:18px; padding:22px; margin-bottom:15px;}
-.dashboard-title{font-size:32px; font-weight:700; color:#111827;}
+.dashboard-header{ background:var(--secondary-background-color); border:1px solid var(--secondary-background-color); border-radius:18px; padding:22px; margin-bottom:15px;}
+.dashboard-title{font-size:32px; font-weight:700; color:var(--text-color);}
 .dashboard-sub{color:#6B7280; font-size:15px; margin-top:4px;}
-.header-card{background:#F8FAFC; border:1px solid #E5E7EB; border-radius:12px; padding:14px; text-align:center; height:90px;}
+.header-card{background:var(--background-color); border:1px solid var(--secondary-background-color); border-radius:12px; padding:14px; text-align:center; height:90px;}
 .header-label{font-size:12px;color:#64748B;text-transform:uppercase;letter-spacing:.08em;}
-.header-value{margin-top:8px;font-size:22px;font-weight:700;color:#111827;}
+.header-value{margin-top:8px;font-size:22px;font-weight:700;color:var(--text-color);}
 .live-dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#10B981;margin-right:8px;}
 </style>
 """, unsafe_allow_html=True)
@@ -380,7 +413,9 @@ with st.spinner(f"Fetching telemetry for {api_facility_id}..."):
         else:
             df = pd.DataFrame(records)
             # --- DATA PREP ---
-            df['timestamp'] = pd.to_datetime(df['timestamp'])
+            df['timestamp'] = pd.to_datetime(df['timestamp'], format='ISO8601', errors='coerce')
+            if df['timestamp'].isna().all():
+                df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
             df = df.sort_values('timestamp')
             if 'hvac_kwh' not in df.columns:
                 df['hvac_kwh'] = df['energy_kwh'] * 0.45
@@ -454,7 +489,7 @@ with st.spinner(f"Fetching telemetry for {api_facility_id}..."):
             with k7:
                 st.markdown(f"""
                 <div class="kpi-card">
-                    <div class="kpi-title">Avg Daily Usage</div>
+                    <div class="kpi-title">Daily Usage</div>
                     <div class="kpi-value">{total_kwh/30:,.0f}</div>
                     <div class="kpi-footer">kWh / day</div>
                 </div>
@@ -509,8 +544,8 @@ with st.spinner(f"Fetching telemetry for {api_facility_id}..."):
                         height=240,
                         showlegend=False,
                         margin=dict(l=0, r=0, t=10, b=10),
-                        paper_bgcolor="white",
-                        plot_bgcolor="white"
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)'
                     )
                     st.plotly_chart(fig_bar, width='content', config={"displayModeBar":False})
 
@@ -522,7 +557,7 @@ with st.spinner(f"Fetching telemetry for {api_facility_id}..."):
                 st.metric("Peak Day", df["energy_kwh"].max())
             st.metric("Largest Consumer", "HVAC")
 
-            row1, row2, row3 = st.columns([4, 4, 4], gap="medium")
+            row1, row2, row3 = st.columns([1, 1, 1], gap="medium")
 
             with row1:
                 with st.container(border=True):
@@ -534,13 +569,13 @@ with st.spinner(f"Fetching telemetry for {api_facility_id}..."):
                     heatmap_data = heatmap_data.reindex(index=days, columns=range(24), fill_value=0)
                     fig_heat = px.imshow(heatmap_data, aspect="auto", color_continuous_scale="Blues")
                     fig_heat.update_layout(
-                        height=360,
+                        height=250,
                         margin=dict(l=5, r=5, t=5, b=5),
-                        paper_bgcolor="white",
-                        plot_bgcolor="white",
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)',
                         coloraxis_showscale=False
                     )
-                    st.plotly_chart(fig_heat, width='content', config={"displayModeBar":False})
+                    st.plotly_chart(fig_heat, use_container_width=True, config={"displayModeBar":False})
 
             with row2:
                 with st.container(border=True):
@@ -549,12 +584,12 @@ with st.spinner(f"Fetching telemetry for {api_facility_id}..."):
                     fig_peak = px.line(demand, x="timestamp", y="peak_demand_kw")
                     fig_peak.update_traces(line=dict(color="#2563EB", width=3))
                     fig_peak.update_layout(
-                        height=360,
+                        height=250,
                         margin=dict(l=5, r=5, t=5, b=5),
-                        paper_bgcolor="white",
-                        plot_bgcolor="white"
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)'
                     )
-                    st.plotly_chart(fig_peak, width='content', config={"displayModeBar":False})
+                    st.plotly_chart(fig_peak, use_container_width=True, config={"displayModeBar":False})
 
             forecast = df.copy()
             forecast["date"] = forecast["timestamp"].dt.date
@@ -564,15 +599,16 @@ with st.spinner(f"Fetching telemetry for {api_facility_id}..."):
             with row3:
                 with st.container(border=True):
                     st.subheader("7-Day Forecast")
-                    fig_forecast = px.line(forecast, x="date", y=["energy_kwh", "forecast"])
+                    fig_forecast = px.line(forecast, x="date", y="energy_kwh")
+                    # fig_forecast = px.line(forecast, x="date", y=["energy_kwh", "forecast"])
                     fig_forecast.update_layout(
-                        height=360,
+                        height=250,
                         margin=dict(l=5, r=5, t=5, b=5),
                         legend=dict(orientation="h", y=1.02),
-                        paper_bgcolor="white",
-                        plot_bgcolor="white"
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        plot_bgcolor='rgba(0,0,0,0)'
                     )
-                    st.plotly_chart(fig_forecast, width='content', config={"displayModeBar":False})
+                    st.plotly_chart(fig_forecast, use_container_width=True, config={"displayModeBar":False})
 
             # --- AGENTIC INTELLIGENCE ---
             st.markdown("### 🤖 Agentic Intelligence & Optimization")
@@ -644,7 +680,7 @@ with st.spinner(f"Fetching telemetry for {api_facility_id}..."):
     else:
         st.error("Failed to retrieve energy records from the database layer.")
 
-# import streamlit as st
+    # import streamlit as st
 # import pandas as pd
 # import plotly.express as px
 # import plotly.graph_objects as go

@@ -30,12 +30,13 @@ def stream_live_data():
             peak_kw = base_kwh * random.uniform(1.1, 1.3)
             cost = base_kwh * 0.12
             record_id = str(uuid.uuid4())
+            timestamp_iso = now.isoformat()
 
             # Insert the live reading into the database
             cursor.execute("""
                 INSERT INTO energy_usage (record_id, facility_id, timestamp, energy_kwh, peak_demand_kw, cost)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (record_id, "FAC-001", now.strftime("%Y-%m-%d %H:%M:%S"), round(base_kwh, 2), round(peak_kw, 2), round(cost, 2)))
+            """, (record_id, "FAC-001", timestamp_iso, round(base_kwh, 2), round(peak_kw, 2), round(cost, 2)))
 
             conn.commit()
             conn.close()

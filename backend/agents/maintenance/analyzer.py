@@ -45,6 +45,56 @@ class MaintenanceAnalyzer:
             logger.exception("Failed to load Maintenance ML models: %s", e)
             self._models_loaded = False
 
+    def predict_features(self, features_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """Shared logic to predict from a features dictionary."""
+        self._load_models()
+        if not self.failure_model or not self.fault_model:
+            raise RuntimeError("Maintenance ML models not available in models/ directory")
+
+        # Map input JSON data to the AI4I 6-feature format.
+        safe_get = lambda key, default: float(features_dict.get(key, default))
+        
+        type_mapping = {'L': 0, 'M': 1, 'H': 2}
+        type_val = type_mapping.get(features_dict.get('type', 'M'), 1)
+
+        features_df = pd.DataFrame([{
+            'Type': type_val,
+            'Air temperature [K]': safe_get('air_temp', 300.0),
+            'Process temperature [K]': safe_get('process_temp', 310.0),
+            'Rotational speed [rpm]': safe_get('speed', 1500.0),
+            'Torque [Nm]': safe_get('torque', 40.0),
+            'Tool wear [min]': safe_get('wear', 15.0)
+        }])
+
+        # 1. Predict Failure Probability (Health Score)
+        failure_probs = self.failure_model.predict_proba(features_df)[0]
+        prob_failure = float(failure_probs[1])
+        health_score = max(0.0, min(100.0, (1.0 - prob_failure) * 100))
+
+        # 2. Predict Specific Issue (if probability of failure > 50%)
+        predicted_issue = "Normal Operation"
+        anomalies = []
+        
+        if prob_failure > 0.50:
+            predicted_issue = str(self.fault_model.predict(features_df)[0])
+            anomalies.append({
+                "timestamp": datetime.datetime.now().isoformat(),
+                "type": "Imminent Asset Failure Predicted",
+                "severity": "High",
+                "message": f"ML indicates {prob_failure*100:.1f}% chance of failure. Diagnostic: {predicted_issue}."
+            })
+
+        logger.info(f"Maintenance ML analysis complete. Health Score: {health_score:.1f}")
+        return {
+            "status": "success",
+            "metrics": {
+                "asset_health_score": round(health_score, 2),
+                "predicted_issue": predicted_issue,
+            },
+            "anomalies": anomalies,
+            "intelligence_source": "ML"
+        }
+
     def _rule_based_analysis(self, df: pd.DataFrame) -> Dict[str, Any]:
         """Existing deterministic rule-based logic preserved as fallback."""
         anomalies = []
@@ -84,49 +134,7 @@ class MaintenanceAnalyzer:
             if not self.failure_model or not self.fault_model:
                 raise RuntimeError("Maintenance ML models not available in models/ directory")
 
-            latest = df.iloc[-1]
-
-            # Safely map incoming JSON data to the AI4I 6-feature format.
-            safe_get = lambda col, default: float(latest[col]) if col in latest else default
-            
-            features_df = pd.DataFrame([{
-                'Type': 1, # Default to 'Medium' quality
-                'Air temperature [K]': safe_get('air_temp', 300.0),
-                'Process temperature [K]': safe_get('process_temp', 310.0),
-                'Rotational speed [rpm]': safe_get('speed', 1500.0),
-                'Torque [Nm]': safe_get('torque', 40.0),
-                'Tool wear [min]': safe_get('wear', 15.0)
-            }])
-
-            # 1. Predict Failure Probability (Health Score)
-            failure_probs = self.failure_model.predict_proba(features_df)[0]
-            prob_failure = float(failure_probs[1])
-            health_score = max(0.0, min(100.0, (1.0 - prob_failure) * 100))
-
-            # 2. Predict Specific Issue (if probability of failure > 50%)
-            predicted_issue = "Normal Operation"
-            anomalies = []
-            
-            if prob_failure > 0.50:
-                predicted_issue = str(self.fault_model.predict(features_df)[0])
-                anomalies.append({
-                    "timestamp": datetime.datetime.now().isoformat(),
-                    "type": "Imminent Asset Failure Predicted",
-                    "severity": "High",
-                    "message": f"ML indicates {prob_failure*100:.1f}% chance of failure. Diagnostic: {predicted_issue}."
-                })
-
-            logger.info(f"Maintenance ML analysis complete. Health Score: {health_score:.1f}")
-
-            return {
-                "status": "success",
-                "metrics": {
-                    "asset_health_score": round(health_score, 2),
-                    "predicted_issue": predicted_issue,
-                },
-                "anomalies": anomalies,
-                "intelligence_source": "ML"
-            }
+            return self.predict_features(df.iloc[-1])
 
         except Exception as e:
             logger.warning("Maintenance ML analysis failed: %s. Falling back to rules.", e)
