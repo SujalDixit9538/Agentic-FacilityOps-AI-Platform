@@ -64,9 +64,10 @@ else:
     
     # Compute Metrics
     num_assets = len(df_assets)
-    open_tickets = len(df_assets[df_assets['status'] == 'Maintenance Required'])
-    crit_risk = len(df_assets[df_assets.get('failure_probability', 0) > 0.5])
-    avg_health = df_assets['health_score'].mean()
+    open_tickets = len(df_assets[df_assets['status'] == 'Maintenance Required']) if 'status' in df_assets.columns else 0
+    # Fix: use column selection syntax properly instead of dict-like get()
+    crit_risk = len(df_assets[df_assets['failure_probability'] > 0.5]) if 'failure_probability' in df_assets.columns else 0
+    avg_health = df_assets['health_score'].mean() if 'health_score' in df_assets.columns else 0.0
     
     # KPI Row
     col1, col2, col3, col4 = st.columns(4)
@@ -80,90 +81,44 @@ else:
         kpi_card("Avg Fleet Health", f"{avg_health:.1f}%", status="good" if avg_health >= 80 else "warning")
         
     # Health Distribution
-    def get_bucket(score):
-        if score >= 90: return "Excellent"
-        if score >= 70: return "Good"
-        if score >= 50: return "Warning"
-        return "Critical"
-    
-    df_assets['bucket'] = df_assets['health_score'].apply(get_bucket)
-    counts = df_assets['bucket'].value_counts(normalize=True) * 100
-    
-    st.markdown("### Fleet Health Distribution")
-    health_distribution_bar(counts.to_dict())
+    if 'health_score' in df_assets.columns:
+        def get_bucket(score):
+            if score >= 90: return "Excellent"
+            if score >= 70: return "Good"
+            if score >= 50: return "Warning"
+            return "Critical"
+        
+        df_assets['bucket'] = df_assets['health_score'].apply(get_bucket)
+        counts = df_assets['bucket'].value_counts(normalize=True) * 100
+        
+        st.markdown("### Fleet Health Distribution")
+        health_distribution_bar(counts.to_dict())
     
     # Sensor Simulator
     def run_prediction(inputs):
-        # We need to find the asset id or just pass inputs to the analyzer
-        # Actually the backend expects asset_id
-        # Let's just pick the first asset for the mock-up logic or skip if not ideal
+        if df_assets.empty:
+            return {"health_score": 0, "failure_probability": 0}
         res = safe_get(f"/maintenance/analyze/{df_assets.iloc[0]['asset_id']}")
-        return res.get("data", {})
+        data = res.get("data")
+        return data if isinstance(data, dict) else {"health_score": 0, "failure_probability": 0}
         
     sensor_simulator_panel(run_prediction)
     
     # Assets Table
     st.markdown("### Asset Risk Overview")
-    risk_table(df_assets[['asset_id', 'facility_id', 'asset_type', 'health_score', 'failure_probability']])
+    risk_cols = ['asset_id', 'facility_id', 'asset_type']
+    if 'health_score' in df_assets.columns:
+        risk_cols.append('health_score')
+    if 'failure_probability' in df_assets.columns:
+        risk_cols.append('failure_probability')
+    risk_table(df_assets[risk_cols])
 
     # Alerts (Dummy for now as alert data structure needs identification)
     st.markdown("### Active Alerts")
-    alerts = [{"severity": "high", "message": "High failure risk detected on asset A-001"}]
+    alerts = [{
+        "severity": "high", 
+        "title": "Critical Asset Risk", 
+        "description": "High failure risk detected on asset A-001",
+        "facility_id": seed_facility
+    }]
     alert_feed(alerts)
-
-                    # 5. Agentic Intelligence Section
-                    st.markdown("### 🤖 Intelligence Engine: Maintenance Agent")
-                    st.info("The Maintenance Agent analyzes asset age, expected lifespan, and historical repair logs to predict failure risks.")
-                    
-                    if st.button("🧠 Run Health Analysis", type="primary", use_container_width=True):
-                        with st.spinner(f"Agent is analyzing {selected_asset}..."):
-                            analysis_response = safe_get(f"/maintenance/analyze/{selected_asset}")
-                            
-                            if analysis_response.get("success"):
-                                insights = analysis_response.get("data", {})
-                                alerts = insights.get("alerts", [])
-                                recommendations = insights.get("recommendations", []) # <-- Extract new recommendations data
-                                health_status = insights.get("analysis", {}).get("health_status", "Unknown")
-                                metrics = insights.get("analysis", {}).get("metrics", {})
-                                
-                                # Display Health Status
-                                status_color = "green" if health_status == "Healthy" else "orange" if health_status == "Degraded" else "red"
-                                st.markdown(f"#### Overall Health Status: :{status_color}[{health_status}]")
-                                
-                                # Display Metrics
-                                col1, col2, col3 = st.columns(3)
-                                col1.metric("Life Consumed", f"{metrics.get('life_consumed_pct', 0)}%")
-                                col2.metric("Total Repair Cost", f"${metrics.get('total_repair_cost', 0):,.2f}")
-                                col3.metric("Recent Repairs (365d)", metrics.get("recent_repairs", 0))
-                                
-                                # Render Anomalies / Alerts
-                                if alerts:
-                                    st.error(f"⚠️ Agent flagged {len(alerts)} risk factors.")
-                                    for alert in alerts:
-                                        with st.expander(f"[{alert['severity'].upper()}] {alert['type']} (Click for details)"):
-                                            st.write(f"**Message:** {alert['message']}")
-                                            st.caption(f"Generated by: {alert['source']} | ID: {alert['alert_id']}")
-                                else:
-                                    st.success("✅ No critical risk factors detected. Asset is operating within normal parameters.")
-
-                                # --- NEW ETP-013 CODE BELOW ---
-                                # Render Actionable Recommendations
-                                st.markdown("#### 🛠️ Recommended Actions")
-                                if recommendations:
-                                    for rec in recommendations:
-                                        # Map priority to Streamlit text colors for quick scanning
-                                        priority_color = "red" if rec.get('priority') == "High" else "orange" if rec.get('priority') == "Medium" else "green"
-                                        
-                                        st.markdown(f"- **{rec.get('action')}** (Priority: :{priority_color}[{rec.get('priority', 'Low')}])")
-                                        if 'trigger' in rec:
-                                            st.caption(f"&nbsp;&nbsp;&nbsp;&nbsp;*Mitigates: {rec.get('trigger')}*")
-                                else:
-                                    st.info("No specific maintenance actions required at this time.")
-                                # ------------------------------
-
-                            else:
-                                st.error("Agent analysis failed to execute or backend is unreachable.")
-                else:
-                    st.error("Failed to retrieve maintenance logs.")
-    else:
-        st.error("Failed to retrieve assets from the database layer.")
