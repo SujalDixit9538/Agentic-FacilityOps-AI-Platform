@@ -16,7 +16,14 @@ with st.sidebar:
     st.markdown("### ⚙️ Module Controls")
     st.info("Simulate asset registration and maintenance history ingestion.")
     
-    seed_facility = st.selectbox("Target Facility", ["FAC-001", "FAC-002"], key="maint_seed_target")
+    # Fetch facilities from backend
+    facilities = ["FAC-001", "FAC-002"] # Fallback
+    resp = safe_get("/maintenance/facilities")
+    if resp and "data" in resp and "facilities" in resp["data"]:
+        facilities = resp["data"]["facilities"]
+    
+    seed_facility = st.selectbox("Target Facility", facilities, key="maint_seed_target")
+
     
     if st.button("🔄 Trigger Mock Data Ingestion", use_container_width=True):
         with st.spinner("Provisioning assets and repair logs..."):
@@ -50,7 +57,7 @@ st.divider()
 
 # 2. Facility Selection
 st.markdown("### Asset Management Dashboard")
-selected_facility = st.selectbox("Select Target Facility", ["FAC-001", "FAC-002"])
+selected_facility = st.selectbox("Select Target Facility", facilities)
 
 # 3. Data Retrieval & Visualization
 with st.spinner(f"Loading assets for {selected_facility}..."):

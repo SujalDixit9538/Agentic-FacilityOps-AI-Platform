@@ -21,13 +21,24 @@ setup_logging()
 
 Base.metadata.create_all(bind=engine)
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup logic
+    await initialize_default_data()
+    yield
+    # Shutdown logic
+    pass
+
 # Initialize FastAPI Application
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Lightweight backend for Facility Intelligence",
     version="1.0.0",
     docs_url="/api/docs",
-    redoc_url="/api/redoc"
+    redoc_url="/api/redoc",
+    lifespan=lifespan
 )
 
 # 1. Register Global Exception Handler
@@ -54,7 +65,6 @@ async def root_redirect():
     """Redirects the root URL to the interactive Swagger UI."""
     return RedirectResponse(url="/api/docs")
 
-@app.on_event("startup")
 async def initialize_default_data():
     """
     Automatically seeds the database with initial mock data on startup 

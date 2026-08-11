@@ -17,6 +17,14 @@ async def maintenance_module_health(db: Session = Depends(get_db)):
     status = service.get_module_status()
     return success_response(message="Maintenance module health check", data=status)
 
+@router.get("/facilities")
+async def get_facilities(db: Session = Depends(get_db)):
+    """Returns a list of distinct facility_ids from the assets table."""
+    from backend.database.models.maintenance import Asset
+    facilities = db.query(Asset.facility_id).distinct().all()
+    facility_list = [f[0] for f in facilities]
+    return success_response(message="Retrieved facilities", data={"facilities": facility_list})
+
 @router.post("/seed")
 async def seed_maintenance_data(facility_id: str = Query(None), db: Session = Depends(get_db)):
     """Triggers the mock asset and maintenance history pipeline."""
