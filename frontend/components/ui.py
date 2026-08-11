@@ -6,6 +6,12 @@ from typing import Callable, Optional, Dict, List, Any
 # Import theme constants
 from frontend.utils.theme import COLORS
 
+def hex_to_rgba(hex_color: str, alpha: float) -> str:
+    """Converts hex color (e.g. #F87171) to rgba(r, g, b, alpha)."""
+    hex_color = hex_color.lstrip('#')
+    r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+    return f"rgba({r},{g},{b},{alpha})"
+
 def kpi_card(label: str, value: str, delta: Optional[str] = None, icon: Optional[str] = None, status: str = "neutral") -> None:
     """
     Renders a styled metric card with a colored left border based on status.
@@ -70,9 +76,9 @@ def health_gauge(score: float, title: str = "Health Score", size: str = "medium"
             'bgcolor': COLORS["bg"],
             'borderwidth': 0,
             'steps': [
-                {'range': [0, 50], 'color': f"{COLORS['critical']}20"}, # 20 is hex opacity
-                {'range': [50, 80], 'color': f"{COLORS['warning']}20"},
-                {'range': [80, 100], 'color': f"{COLORS['success']}20"}
+                {'range': [0, 50], 'color': hex_to_rgba(COLORS['critical'], 0.12)},
+                {'range': [50, 80], 'color': hex_to_rgba(COLORS['warning'], 0.12)},
+                {'range': [80, 100], 'color': hex_to_rgba(COLORS['success'], 0.12)}
             ]
         }
     ))
@@ -84,7 +90,7 @@ def health_gauge(score: float, title: str = "Health Score", size: str = "medium"
         paper_bgcolor="rgba(0,0,0,0)",
         font={'family': "sans-serif"}
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 def health_distribution_bar(distribution: Dict[str, float]) -> None:
     """
@@ -131,15 +137,17 @@ def health_distribution_bar(distribution: Dict[str, float]) -> None:
         showlegend=True,
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(color=COLORS["text_sec"]))
     )
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    st.plotly_chart(fig, width='stretch', config={'displayModeBar': False})
 
 def risk_table(df: pd.DataFrame) -> None:
     """
     Renders a styled dataframe where text color indicates risk level based on health_score.
     """
     def style_risk_rows(row):
-        score = row.get('health_score', 100)
-        if score >= 80:
+        score = row.get('health_score')
+        if pd.isna(score):
+            color = COLORS["text_sec"]
+        elif score >= 80:
             color = COLORS["success"]
         elif score >= 50:
             color = COLORS["warning"]
@@ -153,7 +161,9 @@ def risk_table(df: pd.DataFrame) -> None:
     # Configure generic styling for headers/background
     styled_df = styled_df.set_properties(**{
         'background-color': COLORS["surface"],
-        'border-color': COLORS["border"]
+        'border-color': COLORS["border"],
+        'text-align': 'left',
+        'padding': '10px'
     })
     
     st.dataframe(styled_df, use_container_width=True, hide_index=True)
@@ -178,7 +188,7 @@ def sensor_simulator_panel(on_predict: Callable[[Dict[str, Any]], Dict[str, Any]
             speed = st.number_input("Rotational Speed [rpm]", min_value=1000, max_value=3000, value=1500, step=10)
             wear = st.number_input("Tool Wear [min]", min_value=0, max_value=250, value=50, step=1)
             
-        submitted = st.form_submit_button("Run Prediction", use_container_width=True)
+        submitted = st.form_submit_button("Run Prediction", width='stretch')
         
         if submitted:
             inputs = {
@@ -244,9 +254,10 @@ def alert_feed(alerts: List[Dict[str, str]]) -> None:
                 display: flex;
                 align-items: center;
                 justify-content: space-between;">
-                <span style="font-size: 15px;">{alert['title']}</span>
+                <span style="font-size: 16px; font-weight: 700; color: #FFFFFF;">{alert['title']}</span>
                 <span style="
-                    font-size: 11px; 
+                    font-size: 12px; 
+                    font-weight: 700;
                     text-transform: uppercase; 
                     color: {color}; 
                     border: 1px solid {color}; 
@@ -255,7 +266,7 @@ def alert_feed(alerts: List[Dict[str, str]]) -> None:
                     {severity}
                 </span>
             </summary>
-            <div style="padding: 0 16px 16px 16px; color: {COLORS['text_sec']}; font-size: 14px; line-height: 1.5;">
+            <div style="padding: 0 16px 16px 16px; color: #E5E7EB; font-size: 15px; font-weight: 500; line-height: 1.5;">
                 {alert['description']}
                 {facility_html}
             </div>

@@ -86,3 +86,31 @@ async def predict_manual(request: ManualPredictRequest):
     features = request.dict()
     result = analyzer.predict_features(features)
     return success_response(message="Manual prediction complete", data=result)
+
+@router.get("/assets-analyzed/{facility_id}")
+async def get_assets_analyzed(facility_id: str, db: Session = Depends(get_db)):
+    """Retrieves all assets for a given facility with analyzed maintenance data."""
+    service = MaintenanceService(db)
+    assets = service.get_facility_assets(facility_id)
+    
+    analyzed_assets = []
+    for asset in assets:
+        asset_dict = AssetResponse.model_validate(asset).model_dump()
+        insights = service.run_agent_analysis(asset.asset_id)
+        
+        # Merge health score and probability
+        analysis = insights.get("analysis", {})
+        metrics = analysis.get("metrics", {})
+        
+        if insights.get("asset_id"):
+            asset_dict["health_score"] = metrics.get("asset_health_score")
+            asset_dict["failure_probability"] = 1.0 - (metrics.get("asset_health_score", 100.0) / 100.0)
+            asset_dict["intelligence_source"] = analysis.get("intelligence_source", "ML")
+        else:
+            asset_dict["health_score"] = None
+            asset_dict["failure_probability"] = None
+            asset_dict["intelligence_source"] = "N/A"
+            
+        analyzed_assets.append(asset_dict)
+        
+    return success_response(message=f"Retrieved {len(analyzed_assets)} analyzed assets", data={"assets": analyzed_assets})

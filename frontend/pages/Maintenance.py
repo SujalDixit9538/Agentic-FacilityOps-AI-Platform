@@ -21,10 +21,14 @@ from frontend.utils.theme import COLORS
 st.set_page_config(page_title="Maintenance | FacilityOPS", layout="wide")
 
 def inject_theme():
-    """Injects dark theme background."""
+    """Injects styles for consistent, clean look."""
     st.markdown(f"""
     <style>
-        .stApp {{ background-color: {COLORS['bg']}; }}
+        .stApp {{ background-color: {COLORS['bg']}; color: {COLORS['text_pri']}; }}
+        h1, h2, h3, h4 {{ color: {COLORS['text_pri']} !important; font-weight: 600 !important; }}
+        .stButton > button {{ border-radius: 8px; border: 1px solid {COLORS['border']}; background-color: {COLORS['surface']}; color: {COLORS['text_pri']}; }}
+        .stSelectbox > div {{ background-color: {COLORS['surface']}; }}
+        .stMarkdown {{ color: {COLORS['text_pri']}; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -54,13 +58,21 @@ st.title(f"🔧 Predictive Maintenance: {seed_facility}")
 selected_facility = seed_facility
 
 # Data Retrieval
-assets_response = safe_get(f"/maintenance/assets/{selected_facility}")
+assets_response = safe_get(f"/maintenance/assets-analyzed/{selected_facility}")
 assets = assets_response.get("data", {}).get("assets", [])
 
 if not assets:
     st.warning("No assets registered for this facility.")
 else:
     df_assets = pd.DataFrame(assets)
+    
+    # Header: Fleet Health
+    if 'health_score' in df_assets.columns:
+        valid_health = df_assets['health_score'].dropna()
+        if not valid_health.empty:
+            avg_health = valid_health.mean()
+            st.markdown(f"### Overall Fleet Health: {avg_health:.1f}%")
+            health_gauge(avg_health, title="Facility Average Health Score", size="small")
     
     # Compute Metrics
     num_assets = len(df_assets)
@@ -79,13 +91,19 @@ else:
         kpi_card("Critical Risks", str(crit_risk), status="critical" if crit_risk > 0 else "good")
     with col4:
         kpi_card("Avg Fleet Health", f"{avg_health:.1f}%", status="good" if avg_health >= 80 else "warning")
+
         
     # Health Distribution
     if 'health_score' in df_assets.columns:
         def get_bucket(score):
-            if score >= 90: return "Excellent"
-            if score >= 70: return "Good"
-            if score >= 50: return "Warning"
+            if pd.isna(score): 
+                return "Unknown"
+            if score >= 90: 
+                return "Excellent"
+            if score >= 70: 
+                return "Good"
+            if score >= 50: 
+                return "Warning"
             return "Critical"
         
         df_assets['bucket'] = df_assets['health_score'].apply(get_bucket)
@@ -98,7 +116,13 @@ else:
     def run_prediction(inputs):
         res = safe_post("/maintenance/predict-manual", payload=inputs)
         data = res.get("data")
-        return data if isinstance(data, dict) else {"health_score": 0, "failure_probability": 0}
+        # Map the response structure to the format expected by the UI
+        if isinstance(data, dict) and "metrics" in data:
+            return {
+                "health_score": data["metrics"].get("asset_health_score", 0),
+                "failure_probability": 0 # This field might need adjustment based on model output
+            }
+        return {"health_score": 0, "failure_probability": 0}
         
     sensor_simulator_panel(run_prediction)
     
@@ -111,12 +135,33 @@ else:
         risk_cols.append('failure_probability')
     risk_table(df_assets[risk_cols])
 
-    # Alerts (Dummy for now as alert data structure needs identification)
+    # Alerts
     st.markdown("### Active Alerts")
-    alerts = [{
-        "severity": "high", 
-        "title": "Critical Asset Risk", 
-        "description": "High failure risk detected on asset A-001",
-        "facility_id": seed_facility
-    }]
-    alert_feed(alerts)
+    
+    # Filter assets for alerts (only those with valid health_score)
+    df_alerts = df_assets[df_assets['health_score'].notna()].copy()
+    
+    alerts = []
+    for _, row in df_alerts.iterrows():
+        score = row['health_score']
+        prob = row['failure_probability'] if pd.notna(row['failure_probability']) else 0
+        
+        if score < 50:
+            alerts.append({
+                "severity": "high",
+                "title": f"{row['asset_id']} - Critical Health",
+                "description": f"Health score: {score:.1f}<br>Failure probability: {prob:.0%}",
+                "facility": selected_facility
+            })
+        elif score < 70:
+            alerts.append({
+                "severity": "medium",
+                "title": f"{row['asset_id']} - Warning Health",
+                "description": f"Health score: {score:.1f}<br>Failure probability: {prob:.0%}",
+                "facility": selected_facility
+            })
+            
+    if alerts:
+        alert_feed(alerts)
+    else:
+        st.info("No active alerts. System status stable.")
