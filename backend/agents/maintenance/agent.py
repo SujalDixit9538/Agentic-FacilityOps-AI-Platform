@@ -46,9 +46,10 @@ class MaintenanceAgent:
             return analysis
         
         analysis_data = analysis.get("analysis", {})
-        health_score = analysis_data.get("health_score", 100)
-        failure_probability = analysis_data.get("failure_probability", 0)
-        predicted_issue = analysis_data.get("predicted_issue", "General maintenance review")
+        metrics = analysis_data.get("metrics", {})
+        health_score = metrics.get("asset_health_score", 100)
+        failure_probability = metrics.get("failure_probability", 0)
+        predicted_issue = metrics.get("predicted_issue", "General maintenance review")
         anomalies = analysis_data.get("anomalies", [])
         
         urgency = "Medium"
@@ -78,6 +79,12 @@ class MaintenanceAgent:
                 groq_resp = json.loads(chat_completion.choices[0].message.content)
                 urgency = groq_resp.get("urgency", urgency)
                 recommended_date = groq_resp.get("recommended_date", recommended_date)
+                if isinstance(recommended_date, str):
+                    try:
+                        from datetime import datetime as _dt
+                        recommended_date = _dt.strptime(recommended_date, "%Y-%m-%d").date()
+                    except Exception:
+                        recommended_date = date.today() + timedelta(days=14)
                 actions = groq_resp.get("actions", actions)
                 work_order_summary = groq_resp.get("work_order_summary", work_order_summary)
             except Exception as e:
