@@ -128,7 +128,10 @@ else:
     
     # Assets Table
     st.markdown("### Asset Risk Overview")
-    risk_cols = ['asset_id', 'facility_id', 'asset_type']
+    df_assets['temp_status'] = df_assets['process_temp'].apply(
+        lambda x: "🔴 High" if pd.notna(x) and x > 315 else ("🟢 Normal" if pd.notna(x) else "N/A")
+    )
+    risk_cols = ['asset_id', 'facility_id', 'asset_type', 'predicted_issue', 'temp_status']
     if 'health_score' in df_assets.columns:
         risk_cols.append('health_score')
     if 'failure_probability' in df_assets.columns:
