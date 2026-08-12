@@ -87,6 +87,13 @@ async def predict_manual(request: ManualPredictRequest):
     result = analyzer.predict_features(features)
     return success_response(message="Manual prediction complete", data=result)
 
+@router.post("/generate-workorder/{asset_id}")
+async def generate_workorder(asset_id: str, db: Session = Depends(get_db)):
+    """Triggers the Maintenance Agent to generate a work order."""
+    service = MaintenanceService(db)
+    result = service.generate_work_order(asset_id)
+    return success_response(message="Work order generation complete", data=result)
+
 @router.get("/assets-analyzed/{facility_id}")
 async def get_assets_analyzed(facility_id: str, db: Session = Depends(get_db)):
     """Retrieves all assets for a given facility with analyzed maintenance data."""

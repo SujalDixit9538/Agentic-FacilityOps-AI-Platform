@@ -36,3 +36,30 @@ class MaintenanceRepository:
         self.db.commit()
         self.db.refresh(db_log)
         return db_log
+
+    def get_pending_log_by_asset(self, asset_id: str):
+        return self.db.query(MaintenanceLog).filter(
+            MaintenanceLog.asset_id == asset_id,
+            MaintenanceLog.status == "Pending"
+        ).first()
+
+    def create_pending_work_order(self, asset_id: str, issue: str, maintenance_date, status: str = "Pending"):
+        db_log = MaintenanceLog(
+            log_id=f"MLG-{uuid.uuid4().hex[:8].upper()}",
+            asset_id=asset_id,
+            issue=issue,
+            maintenance_date=maintenance_date,
+            status=status
+        )
+        self.db.add(db_log)
+        self.db.commit()
+        self.db.refresh(db_log)
+        return db_log
+
+    def update_asset_status(self, asset_id: str, status: str):
+        asset = self.db.query(Asset).filter(Asset.asset_id == asset_id).first()
+        if asset:
+            asset.status = status
+            self.db.commit()
+            self.db.refresh(asset)
+        return asset

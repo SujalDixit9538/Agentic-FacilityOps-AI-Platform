@@ -38,6 +38,11 @@ class MaintenanceService:
         agent = MaintenanceAgent(self.repository.db)
         return agent.analyze_asset(asset_id)
 
+    def generate_work_order(self, asset_id: str):
+        """Triggers the Maintenance Agent to generate a work order."""
+        agent = MaintenanceAgent(self.repository.db)
+        return agent.generate_work_order(asset_id)
+
     def get_module_status(self):
         """Returns the operational status of the Maintenance module."""
         return {
