@@ -60,6 +60,7 @@ class MaintenanceAgent:
         
         if self.client:
             system_prompt = (
+                f"Today's date is {date.today().isoformat()}. "
                 "You are an AI Maintenance Agent. Given an asset's health score, failure probability, "
                 "predicted issue, and telemetry, decide how urgently it needs maintenance. "
                 "Respond ONLY with valid JSON: {\"urgency\": \"Low\"|\"Medium\"|\"High\"|\"Critical\", "
@@ -85,6 +86,11 @@ class MaintenanceAgent:
                         recommended_date = _dt.strptime(recommended_date, "%Y-%m-%d").date()
                     except Exception:
                         recommended_date = date.today() + timedelta(days=14)
+                
+                # Ground recommended_date
+                if recommended_date < date.today():
+                    recommended_date = date.today() + timedelta(days=14)
+
                 actions = groq_resp.get("actions", actions)
                 work_order_summary = groq_resp.get("work_order_summary", work_order_summary)
             except Exception as e:
@@ -151,7 +157,7 @@ class MaintenanceAgent:
                 "speed": l.speed,
                 "torque": l.torque,
                 "wear": l.wear
-            } for l in reversed(logs)
+            } for l in reversed(logs) if l.air_temp is not None
         ]
 
         # 3. Run rules-based health analysis
