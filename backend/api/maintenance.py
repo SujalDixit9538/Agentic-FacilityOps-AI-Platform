@@ -103,6 +103,7 @@ async def get_assets_analyzed(facility_id: str, db: Session = Depends(get_db)):
         metrics = analysis.get("metrics", {})
         
         if insights.get("asset_id"):
+            asset_dict["predicted_issue"] = metrics.get("predicted_issue", "Unknown")
             asset_dict["health_score"] = metrics.get("asset_health_score")
             # Prefer explicit failure_probability from analyzer when available
             asset_dict["failure_probability"] = metrics.get(
@@ -110,10 +111,19 @@ async def get_assets_analyzed(facility_id: str, db: Session = Depends(get_db)):
                 1.0 - (metrics.get("asset_health_score", 100.0) / 100.0)
             )
             asset_dict["intelligence_source"] = analysis.get("intelligence_source", "ML")
+
+            latest_log = service.get_asset_maintenance_history(asset.asset_id, limit=1)
+            latest_telemetry = latest_log[0] if latest_log else None
+            
+            for field in ["air_temp", "process_temp", "speed", "torque", "wear"]:
+                asset_dict[field] = getattr(latest_telemetry, field, None)
         else:
+            asset_dict["predicted_issue"] = "Unknown"
             asset_dict["health_score"] = None
             asset_dict["failure_probability"] = None
             asset_dict["intelligence_source"] = "N/A"
+            for field in ["air_temp", "process_temp", "speed", "torque", "wear"]:
+                asset_dict[field] = None
             
         analyzed_assets.append(asset_dict)
         

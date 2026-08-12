@@ -13,4 +13,4 @@ data/*.db
 check_assets.py
 seed_db.py
 test_ml_sensitivity.py
-verify_ml_scrutiny.py
+verify_ml_scrutiny.pybackend/database/*.db
