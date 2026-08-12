@@ -59,7 +59,7 @@ selected_facility = seed_facility
 
 # Data Retrieval
 assets_response = safe_get(f"/maintenance/assets-analyzed/{selected_facility}")
-assets = assets_response.get("data", {}).get("assets", [])
+assets = assets_response.get("data", {}).get("assets", []) if assets_response else []
 
 if not assets:
     st.warning("No assets registered for this facility.")
