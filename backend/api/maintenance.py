@@ -104,7 +104,11 @@ async def get_assets_analyzed(facility_id: str, db: Session = Depends(get_db)):
         
         if insights.get("asset_id"):
             asset_dict["health_score"] = metrics.get("asset_health_score")
-            asset_dict["failure_probability"] = 1.0 - (metrics.get("asset_health_score", 100.0) / 100.0)
+            # Prefer explicit failure_probability from analyzer when available
+            asset_dict["failure_probability"] = metrics.get(
+                "failure_probability",
+                1.0 - (metrics.get("asset_health_score", 100.0) / 100.0)
+            )
             asset_dict["intelligence_source"] = analysis.get("intelligence_source", "ML")
         else:
             asset_dict["health_score"] = None

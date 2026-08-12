@@ -89,6 +89,7 @@ class MaintenanceAnalyzer:
             "status": "success",
             "metrics": {
                 "asset_health_score": round(health_score, 2),
+                "failure_probability": round(prob_failure, 4),
                 "predicted_issue": predicted_issue,
             },
             "anomalies": anomalies,
@@ -116,6 +117,7 @@ class MaintenanceAnalyzer:
             "status": "success",
             "metrics": {
                 "asset_health_score": float(health_score),
+                "failure_probability": round(max(0.0, min(1.0, 1.0 - (health_score / 100.0))), 4),
                 "predicted_issue": "None" if health_score > 80 else "Overheating (Rule-Based)",
             },
             "anomalies": anomalies,

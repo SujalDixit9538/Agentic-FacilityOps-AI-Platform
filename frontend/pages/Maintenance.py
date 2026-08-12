@@ -120,7 +120,7 @@ else:
         if isinstance(data, dict) and "metrics" in data:
             return {
                 "health_score": data["metrics"].get("asset_health_score", 0),
-                "failure_probability": 0 # This field might need adjustment based on model output
+                "failure_probability": data["metrics"].get("failure_probability", 1.0 - (data["metrics"].get("asset_health_score", 100.0) / 100.0))
             }
         return {"health_score": 0, "failure_probability": 0}
         
@@ -149,14 +149,14 @@ else:
         if score < 50:
             alerts.append({
                 "severity": "high",
-                "title": f"{row['asset_id']} - Critical Health",
+                "title": f"{row['asset_id']} ({row['asset_type']}) - Critical Health",
                 "description": f"Health score: {score:.1f}<br>Failure probability: {prob:.0%}",
                 "facility": selected_facility
             })
         elif score < 70:
             alerts.append({
                 "severity": "medium",
-                "title": f"{row['asset_id']} - Warning Health",
+                "title": f"{row['asset_id']} ({row['asset_type']}) - Warning Health",
                 "description": f"Health score: {score:.1f}<br>Failure probability: {prob:.0%}",
                 "facility": selected_facility
             })
