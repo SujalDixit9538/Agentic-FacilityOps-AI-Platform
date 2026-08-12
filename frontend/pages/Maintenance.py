@@ -131,12 +131,36 @@ else:
     df_assets['temp_status'] = df_assets['process_temp'].apply(
         lambda x: "🔴 High" if pd.notna(x) and x > 315 else ("🟢 Normal" if pd.notna(x) else "N/A")
     )
-    risk_cols = ['asset_id', 'facility_id', 'asset_type', 'predicted_issue', 'temp_status']
-    if 'health_score' in df_assets.columns:
-        risk_cols.append('health_score')
-    if 'failure_probability' in df_assets.columns:
-        risk_cols.append('failure_probability')
-    risk_table(df_assets[risk_cols])
+    
+    # Render table with action buttons
+    for _, asset in df_assets.iterrows():
+        cols = st.columns([4, 1])
+        with cols[0]:
+            st.write(f"**{asset['asset_id']}** ({asset['asset_type']}) - Status: {asset['status']}")
+            st.caption(f"Issue: {asset['predicted_issue']} | Health: {asset['health_score']}%")
+        with cols[1]:
+            if st.button("Generate Order", key=f"btn_{asset['asset_id']}"):
+            # if st.button("🛠️ AI Order", key=f"btn_{asset['asset_id']}"):
+                with st.spinner("Generating..."):
+                    res = safe_post(f"/maintenance/generate-workorder/{asset['asset_id']}")
+                    if res.get("success"):
+                        st.session_state[f"order_{asset['asset_id']}"] = res.get("data", {})
+                        st.toast("Work order generated!")
+                        st.rerun()
+                    else:
+                        st.error("Failed.")
+        
+        # Display stored order if exists
+        order_data = st.session_state.get(f"order_{asset['asset_id']}")
+        if order_data:
+            with st.expander("Order Details", expanded=True):
+                st.write(f"**Urgency:** {order_data.get('urgency')}")
+                st.write(f"**Date:** {order_data.get('recommended_date')}")
+                st.write(f"**Summary:** {order_data.get('work_order_summary')}")
+                st.write(f"**Actions:** {', '.join(order_data.get('actions', []))}")
+                if st.button("Clear", key=f"clr_{asset['asset_id']}"):
+                    del st.session_state[f"order_{asset['asset_id']}"]
+                    st.rerun()
 
     # Alerts
     st.markdown("### Active Alerts")
