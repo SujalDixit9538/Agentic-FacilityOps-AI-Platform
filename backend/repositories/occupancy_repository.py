@@ -32,7 +32,13 @@ class OccupancyRepository:
     def create_security_event(self, data: SecurityEventBase):
         db_event = SecurityEvent(
             event_id=f"SEC-{uuid.uuid4().hex[:8].upper()}",
-            **data.model_dump()
+            facility_id=data.facility_id,
+            event_type=data.event_type,
+            severity=data.severity,
+            event_time=data.event_time,
+            status=data.status,
+            zone_level=data.zone_level,
+            recent_failed_attempts=data.recent_failed_attempts
         )
         self.db.add(db_event)
         self.db.commit()

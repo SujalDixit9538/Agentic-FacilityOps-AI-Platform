@@ -22,6 +22,8 @@ class SecurityEventBase(BaseModel):
     severity: str
     event_time: datetime
     status: str = "Open"
+    zone_level: int = 0
+    recent_failed_attempts: int = 0
 
 class SecurityEventResponse(SecurityEventBase):
     event_id: str

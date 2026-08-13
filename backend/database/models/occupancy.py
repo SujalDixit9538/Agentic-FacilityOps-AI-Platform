@@ -20,6 +20,8 @@ class SecurityEvent(Base):
     event_id = Column(String, primary_key=True, index=True)
     facility_id = Column(String, index=True)
     event_type = Column(String, nullable=False)
-    severity = Column(String, nullable=False) # High, Medium, Low
+    severity = Column(String, nullable=False)  # High, Medium, Low
     event_time = Column(DateTime, default=datetime.datetime.utcnow)
-    status = Column(String, default="Open") # Open, Investigating, Closed
+    status = Column(String, default="Open")  # Open, Investigating, Closed
+    zone_level = Column(Integer, default=0)          # 0=Public, 1=Office, 2=Restricted
+    recent_failed_attempts = Column(Integer, default=0)  # failed badge/access attempts preceding this event
