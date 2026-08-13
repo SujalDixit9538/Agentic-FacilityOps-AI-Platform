@@ -39,7 +39,9 @@ class OccupancyAgent:
                 "event_type": e.event_type,
                 "severity": e.severity,
                 "status": e.status,
-                "event_time": e.event_time.isoformat()
+                "event_time": e.event_time.isoformat(),
+                "zone_level": e.zone_level,
+                "recent_failed_attempts": e.recent_failed_attempts
             } for e in sec_events
         ]
 

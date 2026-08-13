@@ -140,14 +140,10 @@ class OccupancyAnalyzer:
                     except:
                         ev_time = now
                     
-                    ev_type = event.get('event_type', '').lower()
-
-                    # Infer features from DB string
-                    zone_level = 0
-                    if 'server' in ev_type or 'restricted' in ev_type: zone_level = 2
-                    elif 'office' in ev_type: zone_level = 1
-                    
-                    failed_attempts = 3 if 'failed' in ev_type or 'denied' in ev_type else 0
+                    # Use real fields captured at event-generation time,
+                    # not a keyword guess from event_type text.
+                    zone_level = event.get('zone_level', 0)
+                    failed_attempts = event.get('recent_failed_attempts', 0)
 
                     sec_features = pd.DataFrame([{
                         'hour': ev_time.hour,
