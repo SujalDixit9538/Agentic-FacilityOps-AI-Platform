@@ -85,6 +85,20 @@ that, v1 before v2, always.
 
 ## Known Issues / Backlog (live — check off as fixed, don't delete history)
 
+### Cleanup landed outside a planned chunk (commit `fb82ce3`, message ".")
+- [x] `Energy.py` — ~267 lines of dead commented-out code removed. Live code
+      (the still-fake `analyze_facility`) untouched — Chunk 1 Energy fixes
+      still apply as scoped.
+- [x] `Maintenance.py` — seed-response handler now tolerates both list and
+      dict API responses for `assets_seeded`.
+- [ ] NOT fixed by this commit, still open: `st_autorefresh` unconditional
+      import crash (Chunk 1) — code untouched, still crashes on clean
+      install.
+- [ ] `data/facilityops.db` was re-committed in this same commit (2nd
+      regression of the untrack issue, see Chunk 3). Whatever runs `git add
+      .` before commits needs to actually respect `.gitignore`, not rely on
+      periodic manual `git rm --cached`.
+
 ### Confirmed broken, fix in progress (Chunk 1 — Energy + Cost)
 - [ ] `EnergyAgent.analyze_facility()` returns hardcoded `total_kwh: 4500,
       peak_kw: 210` for every facility. Real 368-line hybrid ML/rules
@@ -117,16 +131,62 @@ that, v1 before v2, always.
       renders "N/A". Cosmetic but bundle into whichever pass touches
       Executive next.
 
-### Confirmed broken, not yet started (Chunk 2 — Occupancy & Security + Executive)
-- [ ] `ExecutiveAgent` instantiates `MaintenanceAgent` but never calls it in
-      `generate_executive_summary()` — maintenance data never reaches the
-      executive summary.
-- [ ] Only one combined `frontend/pages/Occupancy_and_Security.py` exists in
-      the pushed repo (confirmed via `git log --all`, no separate-file
-      history at all). If a local Codespace split into two files, it has not
-      been committed/pushed — check `git status` before assuming the split
-      exists. Full Occupancy + Security logic audit still pending regardless
-      of file layout.
+### Confirmed broken, audited (Chunk 2 — Occupancy & Security + Executive) — CLOSED, fixes not yet applied
+- [ ] `ExecutiveAgent.generate_executive_summary()` instantiates `MaintenanceAgent`
+      (agent.py line 114) but never calls it (poll section is lines 139-141,
+      maintenance absent). One-line-scope fix, highest-impact for next demo.
+- [x] Confirmed the earlier `Security.py` split was cosmetic only — all
+      security logic already lived in the combined file. Decision made: keep
+      integrated, empty `Security.py` stub removed. File is
+      `Occupancy_and_Security.py`.
+- [ ] Occupancy half of `OccupancyAnalyzer` is genuinely solid — real
+      regression model, correct feature schema, believable seeded data. No
+      action needed.
+- [ ] Security half is silently non-functional: Isolation Forest needs
+      `zone_level`/`recent_failed_attempts`, analyzer derives both via
+      keyword-matching on `event_type`, but the mock seeder's four event
+      types (`Unauthorized Access`, `Door Left Open`, `Tailgating Detected`,
+      `After-hours Motion`) never match any of the checked keywords
+      (`server`/`restricted`/`office`/`failed`/`denied`). Every event gets
+      zone_level=0, failed_attempts=0, always — dead ML path, differentiated
+      only by hour/day. `SecurityEvent` DB model has no zone or
+      failed-attempts field at all, so this isn't a wiring gap like Cost —
+      the schema itself never captured what the model needs. Rules-fallback
+      (open+high/medium severity) still fires independently, so real alerts
+      aren't lost, ML layer just adds nothing. Needs either new DB
+      columns+real seeding, or dropping the ML claim and being honest it's
+      rules-based for security specifically.
+- [ ] No Groq/LLM call anywhere in Occupancy/Security agent — pure ML+lookup
+      table. Doesn't meet the project's own agentic bar yet (see philosophy
+      section above), unlike Maintenance.
+- [ ] `Occupancy_and_Security.py` frontend still hardcodes
+      `["FAC-001","FAC-002"]` facility selectors in two places — same root
+      cause as everywhere else, fix centrally (Chunk 3 facility-ID item).
+- [x] Occupancy model v2 + analyzer.py capacity-tier patch — FULLY CLOSED,
+      verified end-to-end via Employee AI. Fixed zone taxonomy mismatch
+      between Colab training (transit-hub metaphor) and production
+      (keyword-matching). v2 derives zone_type from real room capacity via
+      3 tiers (>=100 cap = 0, 20-99 = 1, <20 = 2) instead of name keywords.
+      analyzer.py's get_zone_type() patched to use capacity-tier lookup via
+      self.capacities (already existed, no new dependency).
+      Verification (mocked clock, Tue 9AM): intelligence_source = "ML
+      (Partial/Dual Pipeline)", zero false anomalies at normal load
+      (Cafeteria 160/200, Main Lobby 130/150), correctly flags genuine
+      near-capacity (195-198/200). Live API endpoint confirmed same
+      behavior. One false alarm during testing (Cafeteria/Lobby flagged
+      identically at baseline 61.3) was traced to the test script using
+      live server wall-clock time instead of the mocked timestamp — not a
+      code bug, root-caused and reproduced correctly on retest.
+      Known residual limitation, acceptable at current scale: rooms sharing
+      a tier (Main Lobby 150 vs Cafeteria 200, both tier 0) get identical
+      baseline predictions — would need a continuous capacity feature if
+      more varied-capacity rooms get added later.
+      Note for later: analyzer uses live datetime.utcnow() for time-context,
+      not the occupancy record's own timestamp — fine for live monitoring,
+      but a future "historical replay" feature would need an explicit
+      as_of parameter threaded through instead.
+- [ ] Security and Cost models still need the same "shared generator between
+      training and production" treatment discussed above — not yet started.
 
 ### Structural, cross-cutting (Chunk 3 — polish + shared code)
 - [ ] `data/facilityops.db` is tracked in git *again* despite being
@@ -182,9 +242,9 @@ that, v1 before v2, always.
 - **ML models** (`models/`): `maintenance_failure_model_v1.joblib`,
   `maintenance_fault_model_v1.joblib`, `energy_model_total_v1.joblib`,
   `energy_model_hvac_v1.joblib`, `cost_action_model_v1.joblib`,
-  `cost_savings_model_v1.joblib`, `occupancy_model_v1.joblib`,
-  `security_model_v1.joblib` — all trained, present, loadable. Occupancy and
-  Security models not yet audited (Chunk 2).
+  `cost_savings_model_v1.joblib`, `occupancy_model_v1.joblib` (retrained v2,
+  see Chunk 2 — fixed and verified), `security_model_v1.joblib` (audited,
+  confirmed dead ML path — retrain pending, see Chunk 2).
 - **Groq pattern** (apply identically to every agent): `from groq import
   Groq`, `try/except HAS_GROQ`, `load_dotenv()`,
   `os.getenv("GROQ_API_KEY")`, JSON mode via
@@ -202,6 +262,16 @@ that, v1 before v2, always.
 
 - **2026-08-13**: File created. Populated with full audit history through
   Chunk 1 (Energy + Cost), standing rules, chatbot v1/v2 spec, and the
-  agentic-definition discussion. Chunk 2 (Occupancy/Security + Executive) and
-  Chunk 3 (structural/shared code) still pending — update this file as those
-  land.
+  agentic-definition discussion.
+- **2026-08-13 (later same day)**: Confirmed decision log pushed correctly.
+  Verified Occupancy/Security split is cosmetic (Security.py empty, logic
+  still in Occupancy.py) — Chunk 2 backlog entry corrected. Logged an
+  out-of-band cleanup commit (dead code removal in Energy.py, a Maintenance
+  UI fix) and a 2nd `facilityops.db` tracking regression. Chunk 2 not yet
+  started.
+- **2026-08-13 (evening)**: Occupancy model retrained (v2, capacity-tier
+  zones) and analyzer.py patched. Full verification cycle run through
+  Employee AI — initial false-flag traced to a test-script clock-mocking
+  bug, not the fix; retested and confirmed correct. Occupancy fully closed.
+  Chunk 2 remaining open item is Security only (dead ML path, needs DB
+  schema change + retrain + seeder rewrite) — not yet started.

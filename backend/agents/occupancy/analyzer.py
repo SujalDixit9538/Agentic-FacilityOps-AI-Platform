@@ -71,10 +71,13 @@ class OccupancyAnalyzer:
                 df_occ = df_occ.sort_values('timestamp').groupby('room').last().reset_index()
 
                 def get_zone_type(room_name):
-                    r_lower = room_name.lower()
-                    if 'concourse' in r_lower or 'lobby' in r_lower or 'hall' in r_lower: return 0
-                    elif 'platform' in r_lower or 'zone' in r_lower or 'corridor' in r_lower: return 1
-                    else: return 2
+                    max_cap = self.capacities.get(room_name, 100)
+                    if max_cap >= 100:
+                        return 0
+                    elif max_cap >= 20:
+                        return 1
+                    else:
+                        return 2
 
                 df_occ['zone_type'] = df_occ['room'].apply(get_zone_type)
 
