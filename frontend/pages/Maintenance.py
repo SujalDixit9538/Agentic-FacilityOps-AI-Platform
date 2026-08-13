@@ -47,7 +47,13 @@ with st.sidebar:
         with st.spinner("Provisioning assets..."):
             res = safe_post("/maintenance/seed", params={"facility_id": seed_facility})
             if res.get("success"):
-                st.success(f"Ingested {res['data']['assets_seeded']} assets.")
+                data = res.get("data")
+                count = 0
+                if isinstance(data, list) and len(data) > 0:
+                    count = data[0].get("assets_seeded", 0)
+                elif isinstance(data, dict):
+                    count = data.get("assets_seeded", 0)
+                st.success(f"Ingested {count} assets.")
                 st.rerun() 
             else:
                 st.error("Ingestion pipeline failed.")
