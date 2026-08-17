@@ -256,6 +256,18 @@ that, v1 before v2, always.
   Gemini Flash Lite (bulk code generation, reviewed by Claude before
   Employee AI implements it).
 
+## Milestone 3 — Occupancy Agent: Data Layer Rebuilt
+- Replaced hardcoded ZONE_CAPACITIES config dict and fake FAC-001/FAC-002
+  seeding with a real per-facility zone model (occupancy_zones), dynamically
+  generated from data/processed_facilities.csv — same root-cause fix pattern
+  as the Security correlated seeder.
+- Added occupancy_images (CNN-ready, image_path reference only — no DB blobs)
+  and occupancy_forecasts tables. Both schema-ready; images table has no
+  producer yet since real camera integration is future work.
+- Old OccupancyRecord(floor, room) shape is deprecated in favor of
+  OccupancyRecord(zone_id FK). Repository/service/API/frontend rewrite to
+  follow in a separate prompt — not yet done as of this entry.
+
 ---
 
 ## Changelog of this file

@@ -1,29 +1,68 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional
 
-# Occupancy Schemas
-class OccupancyBase(BaseModel):
+class OccupancyZoneBase(BaseModel):
     facility_id: str
     floor: int
-    room: str
+    zone_name: str
+    zone_type: str
+    max_capacity: int
+    area_sqft: Optional[float] = None
+
+class OccupancyZoneResponse(OccupancyZoneBase):
+    zone_id: str
+    class Config:
+        from_attributes = True
+
+class OccupancyRecordBase(BaseModel):
+    facility_id: str
+    zone_id: str
     occupancy_count: int
+    source: str = "sensor"
     timestamp: datetime
 
-class OccupancyResponse(OccupancyBase):
+class OccupancyRecordResponse(OccupancyRecordBase):
     occupancy_id: str
     class Config:
         from_attributes = True
 
-# Security Event Schemas
+class OccupancyImageBase(BaseModel):
+    facility_id: str
+    zone_id: str
+    camera_id: Optional[str] = None
+    image_path: Optional[str] = None
+    captured_at: datetime
+    detected_count: Optional[int] = None
+    confidence_score: Optional[float] = None
+    model_version: Optional[str] = None
+    processed_at: Optional[datetime] = None
+
+class OccupancyImageResponse(OccupancyImageBase):
+    image_id: str
+    class Config:
+        from_attributes = True
+
+class OccupancyForecastBase(BaseModel):
+    facility_id: str
+    zone_id: str
+    forecast_date: datetime
+    predicted_occupancy: int
+    predicted_utilization_pct: Optional[float] = None
+    model_version: Optional[str] = None
+
+class OccupancyForecastResponse(OccupancyForecastBase):
+    forecast_id: str
+    class Config:
+        from_attributes = True
+
+# Security Event Schemas (unchanged)
 class SecurityEventBase(BaseModel):
     facility_id: str
     event_type: str
     severity: str
     event_time: datetime
     status: str = "Open"
-    zone_level: int = 0
-    recent_failed_attempts: int = 0
 
 class SecurityEventResponse(SecurityEventBase):
     event_id: str
