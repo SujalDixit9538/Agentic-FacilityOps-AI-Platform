@@ -75,7 +75,12 @@ def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: in
     occ_created = 0
     sec_created = 0
 
-    # 3. Generate Time-Series Occupancy (Hourly, per real zone)
+    # 3. Generate Deterministic Time-Series Occupancy (30 days, Hourly, per real zone)
+    random.seed(42)
+    days = 30
+    base_time = datetime.datetime.utcnow() - datetime.timedelta(days=days)
+    occ_created = 0
+
     for i in range(days * 24):
         current_time = base_time + datetime.timedelta(hours=i)
         hour = current_time.hour
@@ -85,15 +90,24 @@ def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: in
             if zone.zone_type == "server_room":
                 count = random.randint(0, 2)
             elif is_working_hours:
-                count = random.randint(int(zone.max_capacity * 0.2), max(zone.max_capacity, 1))
+                count = random.randint(int(zone.max_capacity * 0.2), int(zone.max_capacity * 0.8))
             else:
-                count = random.randint(0, max(int(zone.max_capacity * 0.05), 0))
+                count = random.randint(0, max(int(zone.max_capacity * 0.05), 1))
+
+            # Demo Scenarios
+            if i == (days * 24 - 1):
+                if zone.zone_type == "meeting_room" and "Meeting Room A" in zone.zone_name:
+                    count = int(zone.max_capacity * 1.05)
+                elif zone.zone_type == "office_floor":
+                    count = int(zone.max_capacity * 0.82)
+                elif zone.zone_type == "meeting_room" and "Meeting Room B" in zone.zone_name:
+                    count = int(zone.max_capacity * 0.25)
 
             record_data = OccupancyRecordBase(
                 facility_id=facility_id,
                 zone_id=zone.zone_id,
-                occupancy_count=count,
-                source="sensor",
+                occupancy_count=max(0, count),
+                source="demo_sensor",
                 timestamp=current_time,
             )
             repo.create_occupancy_record(record_data)
