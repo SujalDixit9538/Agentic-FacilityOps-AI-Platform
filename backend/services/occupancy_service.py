@@ -59,3 +59,77 @@ class OccupancyService:
 
     def get_module_status(self):
         return {"status": "operational", "intelligence_engine": "rules_based_active"}
+
+    def get_dashboard_data(self, facility_id: str):
+        zones = self.repository.get_zones_for_facility(facility_id)
+        latest_records = {r.zone_id: r for r in self.repository.get_latest_occupancy_by_zone(facility_id)}
+        
+        # Calculate summary
+        total_occ = 0
+        total_cap = 0
+        overcrowded = 0
+        highly = 0
+        under = 0
+        
+        zone_info = []
+        alerts = []
+        
+        for zone in zones:
+            record = latest_records.get(zone.zone_id)
+            occ = record.occupancy_count if record else 0
+            cap = zone.max_capacity
+            util = (occ / cap * 100) if cap > 0 else 0
+            
+            # Status
+            if occ > cap:
+                status = "OVERCROWDED"
+                overcrowded += 1
+                alerts.append({
+                    "alert_type": "OCCUPANCY",
+                    "severity": "HIGH",
+                    "zone_id": zone.zone_id,
+                    "zone_name": zone.zone_name,
+                    "message": f"{zone.zone_name} exceeds configured capacity.",
+                    "utilization_percent": round(util, 1)
+                })
+            elif util >= 80:
+                status = "HIGHLY_UTILIZED"
+                highly += 1
+            elif util >= 40:
+                status = "NORMAL"
+            else:
+                status = "UNDERUTILIZED"
+                under += 1
+                
+            zone_info.append({
+                "zone_id": zone.zone_id,
+                "zone_name": zone.zone_name,
+                "zone_type": zone.zone_type,
+                "floor": zone.floor,
+                "occupancy": occ,
+                "capacity": cap,
+                "utilization_percent": round(util, 1),
+                "status": status,
+                "x_position": zone.x_position,
+                "y_position": zone.y_position
+            })
+            
+            total_occ += occ
+            total_cap += cap
+            
+        return {
+            "facility_id": facility_id,
+            "summary": {
+                "total_occupants": total_occ,
+                "total_capacity": total_cap,
+                "utilization_percent": round((total_occ / total_cap * 100) if total_cap > 0 else 0, 1),
+                "overcrowded_zones": overcrowded,
+                "highly_utilized_zones": highly,
+                "underutilized_zones": under
+            },
+            "zones": zone_info,
+            "room_utilization": [z for z in zone_info if z['zone_type'] == 'meeting_room'],
+            "zone_analytics": [], # Placeholder
+            "alerts": alerts,
+            "trend": [] # Placeholder
+        }
