@@ -12,12 +12,10 @@ from frontend.components.kpi_cards import render_kpi_row
 
 st.set_page_config(page_title="Occupancy Intelligence | FacilityOPS", layout="wide")
 
-# Facility Selector
 with st.sidebar:
     st.markdown("### ⚙️ Facility Selection")
     facility_id = st.selectbox("Select Facility", ["FAC-001", "FAC-002"])
 
-# Header
 st.title("Occupancy Intelligence")
 st.markdown("Real-time space utilization and occupancy monitoring")
 st.divider()
@@ -29,13 +27,14 @@ if not dashboard_data.get("success"):
     st.error("Occupancy data is currently unavailable.")
 else:
     data = dashboard_data.get("data", {})
+    summary = data.get("summary", {})
     
     # KPIs
     kpis = [
-        {"title": "Total Occupants", "value": str(data.get("total_occupants", 0))},
-        {"title": "Overall Utilization", "value": f"{data.get('overall_utilization', 0)}%"},
-        {"title": "Overcrowded Zones", "value": str(data.get("overcrowded_zones", 0))},
-        {"title": "Highly Utilized", "value": str(data.get("highly_utilized_zones", 0))},
+        {"title": "Total Occupants", "value": str(summary.get("total_occupants", 0))},
+        {"title": "Overall Utilization", "value": f"{summary.get('utilization_percent', 0)}%"},
+        {"title": "Overcrowded Zones", "value": str(summary.get("overcrowded_zones", 0))},
+        {"title": "Highly Utilized", "value": str(summary.get("highly_utilized_zones", 0))},
     ]
     render_kpi_row(kpis)
     
@@ -44,30 +43,23 @@ else:
     if alerts:
         st.markdown("## Occupancy Alerts")
         for alert in alerts:
-            st.error(f"**{alert.get('title')}**\n\n{alert.get('message')}\n\nUtilization: {alert.get('utilization')}%")
+            st.error(f"**{alert.get('alert_type')}**\n\n{alert.get('message')}\n\nUtilization: {alert.get('utilization_percent')}%")
     
-    # Heatmap Section
+    # Heatmap
     st.markdown("## Occupancy Heatmap")
     zones = data.get("zones", [])
     if zones:
         cols = st.columns(4)
         for i, zone in enumerate(zones):
-            util = zone.get("utilization", 0)
+            util = zone.get("utilization_percent", 0)
             color = "green" if util < 40 else "orange" if util < 80 else "red"
             with cols[i % 4]:
                 st.markdown(f"""
                 <div style="border: 2px solid {color}; padding: 10px; border-radius: 5px; margin-bottom: 10px; text-align: center;">
-                    <strong>{zone.get('name')}</strong><br>
+                    <strong>{zone.get('zone_name')}</strong><br>
                     {zone.get('occupancy')} / {zone.get('capacity')}<br>
                     {util}%
                 </div>
                 """, unsafe_allow_html=True)
-
-    # Trend
-    st.markdown("## Occupancy Trend")
-    trend_data = data.get("trend", [])
-    if trend_data:
-        df_trend = pd.DataFrame(trend_data)
-        st.line_chart(df_trend.set_index("timestamp"))
     else:
-        st.info("No occupancy records available for this facility.")
+        st.info("No occupancy zones found.")
