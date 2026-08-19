@@ -1,19 +1,31 @@
 from sqlalchemy.orm import Session
-from backend.database.models.occupancy import OccupancyRecord, SecurityEvent
-from backend.schemas.occupancy import OccupancyBase, SecurityEventBase
+from sqlalchemy import func
+from backend.database.models.occupancy import OccupancyRecord, SecurityEvent, OccupancyZone, OccupancyImage
+from backend.schemas.occupancy import OccupancyRecordBase, SecurityEventBase, OccupancyImageBase
 import uuid
 
 class OccupancyRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    # --- Occupancy Methods ---
     def get_latest_occupancy(self, facility_id: str, limit: int = 100):
         return self.db.query(OccupancyRecord).filter(
             OccupancyRecord.facility_id == facility_id
         ).order_by(OccupancyRecord.timestamp.desc()).limit(limit).all()
 
-    def create_occupancy_record(self, data: OccupancyBase):
+    def get_latest_occupancy_by_zone(self, facility_id: str):
+        subq = self.db.query(
+            OccupancyRecord.zone_id,
+            func.max(OccupancyRecord.timestamp).label("max_ts")
+        ).filter(OccupancyRecord.facility_id == facility_id).group_by(OccupancyRecord.zone_id).subquery()
+
+        return self.db.query(OccupancyRecord).join(
+            subq,
+            (OccupancyRecord.zone_id == subq.c.zone_id) &
+            (OccupancyRecord.timestamp == subq.c.max_ts)
+        ).all()
+
+    def create_occupancy_record(self, data: OccupancyRecordBase):
         db_record = OccupancyRecord(
             occupancy_id=f"OCC-{uuid.uuid4().hex[:6].upper()}",
             **data.model_dump()
@@ -23,7 +35,33 @@ class OccupancyRepository:
         self.db.refresh(db_record)
         return db_record
 
-    # --- Security Methods ---
+    def get_zones_for_facility(self, facility_id: str):
+        return self.db.query(OccupancyZone).filter(OccupancyZone.facility_id == facility_id).all()
+
+    def get_zone(self, zone_id: str):
+        return self.db.query(OccupancyZone).filter(OccupancyZone.zone_id == zone_id).first()
+
+    def create_zone(self, zone: OccupancyZone):
+        self.db.add(zone)
+        self.db.commit()
+        self.db.refresh(zone)
+        return zone
+
+    def bulk_create_zones(self, zones: list[OccupancyZone]):
+        self.db.add_all(zones)
+        self.db.commit()
+        return zones
+
+    def create_image_record(self, data: OccupancyImageBase):
+        db_img = OccupancyImage(
+            image_id=f"IMG-{uuid.uuid4().hex[:6].upper()}",
+            **data.model_dump()
+        )
+        self.db.add(db_img)
+        self.db.commit()
+        self.db.refresh(db_img)
+        return db_img
+
     def get_security_events(self, facility_id: str, limit: int = 50):
         return self.db.query(SecurityEvent).filter(
             SecurityEvent.facility_id == facility_id
@@ -32,13 +70,7 @@ class OccupancyRepository:
     def create_security_event(self, data: SecurityEventBase):
         db_event = SecurityEvent(
             event_id=f"SEC-{uuid.uuid4().hex[:8].upper()}",
-            facility_id=data.facility_id,
-            event_type=data.event_type,
-            severity=data.severity,
-            event_time=data.event_time,
-            status=data.status,
-            zone_level=data.zone_level,
-            recent_failed_attempts=data.recent_failed_attempts
+            **data.model_dump()
         )
         self.db.add(db_event)
         self.db.commit()

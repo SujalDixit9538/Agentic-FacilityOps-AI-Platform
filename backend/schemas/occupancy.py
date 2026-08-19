@@ -9,6 +9,8 @@ class OccupancyZoneBase(BaseModel):
     zone_type: str
     max_capacity: int
     area_sqft: Optional[float] = None
+    x_position: Optional[float] = None
+    y_position: Optional[float] = None
 
 class OccupancyZoneResponse(OccupancyZoneBase):
     zone_id: str
@@ -56,13 +58,14 @@ class OccupancyForecastResponse(OccupancyForecastBase):
     class Config:
         from_attributes = True
 
-# Security Event Schemas (unchanged)
 class SecurityEventBase(BaseModel):
     facility_id: str
     event_type: str
     severity: str
     event_time: datetime
     status: str = "Open"
+    zone_level: Optional[int] = None
+    recent_failed_attempts: Optional[int] = None
 
 class SecurityEventResponse(SecurityEventBase):
     event_id: str

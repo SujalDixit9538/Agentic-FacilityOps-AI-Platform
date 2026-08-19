@@ -7,6 +7,7 @@ from backend.api.router import api_router
 from backend.middleware.exceptions import global_exception_handler
 from backend.services.mock_cost_service import seed_mock_cost_data
 from backend.services.mock_maintenance_service import seed_mock_maintenance_data
+# from backend.services.mock_occupancy_service import seed_mock_occupancy_data
 from backend.services.mock_occupancy_service import seed_mock_occupancy_data
 from backend.services.logging_service import setup_logging
 from backend.middleware.timing import timing_middleware
@@ -87,8 +88,8 @@ async def initialize_default_data():
         
         # Seed Occupancy & Security Data
         from backend.services.mock_occupancy_service import seed_mock_occupancy_data
-        seed_mock_occupancy_data(db, facility_id="FAC-001", days=7)
-        seed_mock_occupancy_data(db, facility_id="FAC-002", days=7)
+        for f_id in real_facility_ids:
+            seed_mock_occupancy_data(db, facility_id=f_id, days=7)
         
         # Seed Cost Optimization Data (ETP-019)
         seed_mock_cost_data(db, facility_id="FAC-001", months_back=6)

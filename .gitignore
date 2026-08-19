@@ -7,12 +7,12 @@ env/
 .env.example
 logs/
 .ipynb_checkpoints/
+.pytest_cache/
 .cache/
 .continue/
+.github/
 data/*.db
 check_assets.py
 seed_db.py
-test_ml_sensitivity.py
-verify_ml_scrutiny.pybackend/database/*.db
-docs/
-tests/
+backend/database/*.db
+tests/*

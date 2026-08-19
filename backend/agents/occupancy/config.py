@@ -7,12 +7,12 @@ OCCUPANCY_RULES = {
     "OVERCROWDING_THRESHOLD_PCT": 0.90, 
     
     # Standard max capacities for facility zones
-    "ZONE_CAPACITIES": {
-        "Main Lobby": 150,
-        "Meeting Room A": 20,
-        "Cafeteria": 200,
-        "Server Room": 5
-    },
+    # "ZONE_CAPACITIES": {
+    #     "Main Lobby": 150,
+    #     "Meeting Room A": 20,
+    #     "Cafeteria": 200,
+    #     "Server Room": 5
+    # },
     
     # Expected standard operating hours
     "WORKING_HOURS": {

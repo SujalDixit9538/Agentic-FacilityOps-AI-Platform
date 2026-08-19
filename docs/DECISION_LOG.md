@@ -132,6 +132,34 @@ that, v1 before v2, always.
       Executive next.
 
 ### Confirmed broken, audited (Chunk 2 — Occupancy & Security + Executive) — CLOSED, fixes not yet applied
+-- [ ] BROKEN: occupancy_repository.py / mock_occupancy_service.py still
+-      import removed `OccupancyBase` schema and construct OccupancyRecord
+-      with floor/room — ImportError on startup. Needs full rewrite against
+-      zone_id, plus wiring occupancy_zone_generator into the seed path.
+-- [ ] BROKEN: SecurityEvent model/schema never gained zone_level /
+-      recent_failed_attempts columns, but analyzer.py, agent.py, and the
+-      rewritten mock_occupancy_service.py all already read/write them.
+-      Pydantic validation will fail on SecurityEventBase construction.
+-      Needs the columns added to both SecurityEvent (model) and
+-      SecurityEventBase (schema) before this seeder can run at all.
+-- [ ] Occupancy side of analyzer.py still reads OCCUPANCY_RULES config dict
+-      and groups by a `room` column that no longer exists on OccupancyRecord
+-      — not crashing yet only because nothing feeds it real records.
+- [x] occupancy_repository.py, mock_occupancy_service.py, occupancy_service.py,
++      api/occupancy.py all rewritten against the zone_id-based schema.
++      SecurityEvent gained zone_level/recent_failed_attempts columns.
++      occupancy_zone_generator wired into the seed path (real facility_id
++      list, same pattern as Maintenance), including x_position/y_position
++      for the spatial heatmap. analyzer.py now reads real per-zone capacity
++      instead of the hardcoded ZONE_CAPACITIES dict, and Isolation Forest
++      uses real zone_level/recent_failed_attempts as features again.
++      agent.py restored to the standard alert_service + action_engine
++      pattern (a Gemini Pro draft had swapped this for a nonexistent
++      llm_engine module — caught in review before it reached the repo).
++      Verified end-to-end: real zone generation, real seeding, forced an
++      overcrowding condition and confirmed the full alert pipeline fires
++      with the correct alert shape (type/severity/message) and real
++      canned mitigation recommendations.
 - [ ] `ExecutiveAgent.generate_executive_summary()` instantiates `MaintenanceAgent`
       (agent.py line 114) but never calls it (poll section is lines 139-141,
       maintenance absent). One-line-scope fix, highest-impact for next demo.
@@ -188,7 +216,28 @@ that, v1 before v2, always.
 - [ ] Security and Cost models still need the same "shared generator between
       training and production" treatment discussed above — not yet started.
 
-### Structural, cross-cutting (Chunk 3 — polish + shared code)
+### Chunk 2 cont'd — Occupancy zone-model migration (in progress)
+- [x] `occupancy_zones`, `occupancy_records` (zone_id-based), `occupancy_images`
+      (CNN-ready, image_path reference only, no DB blobs), `occupancy_forecasts`
+      added to backend/database/models/occupancy.py  matching schemas.
+- [x] `occupancy_zone_generator.py` added — type-aware, area-scaled zone
+      generation per real facility_id from processed_facilities.csv. Not yet
+      wired into main.py startup seeding.
+- [ ] BROKEN: occupancy_repository.py / mock_occupancy_service.py still
+      import removed `OccupancyBase` schema and construct OccupancyRecord
+      with floor/room — ImportError on startup. Needs full rewrite against
+      zone_id, plus wiring occupancy_zone_generator into the seed path.
+- [ ] BROKEN: SecurityEvent model/schema never gained zone_level /
+      recent_failed_attempts columns, but analyzer.py, agent.py, and the
+      rewritten mock_occupancy_service.py all already read/write them.
+      Pydantic validation will fail on SecurityEventBase construction.
+      Needs the columns added to both SecurityEvent (model) and
+      SecurityEventBase (schema) before this seeder can run at all.
+- [ ] Occupancy side of analyzer.py still reads OCCUPANCY_RULES config dict
+      and groups by a `room` column that no longer exists on OccupancyRecord
+      — not crashing yet only because nothing feeds it real records.
+
+### Structural, cross-cutting (Chunk 3 — polish  shared code)
 - [ ] `data/facilityops.db` is tracked in git *again* despite being
       "untracked" in commit `1a39ce2` — the very next Maintenance commit
       (`bc5d334`) re-added it as a binary diff even with `data/*.db` already
@@ -256,17 +305,6 @@ that, v1 before v2, always.
   Gemini Flash Lite (bulk code generation, reviewed by Claude before
   Employee AI implements it).
 
-## Milestone 3 — Occupancy Agent: Data Layer Rebuilt
-- Replaced hardcoded ZONE_CAPACITIES config dict and fake FAC-001/FAC-002
-  seeding with a real per-facility zone model (occupancy_zones), dynamically
-  generated from data/processed_facilities.csv — same root-cause fix pattern
-  as the Security correlated seeder.
-- Added occupancy_images (CNN-ready, image_path reference only — no DB blobs)
-  and occupancy_forecasts tables. Both schema-ready; images table has no
-  producer yet since real camera integration is future work.
-- Old OccupancyRecord(floor, room) shape is deprecated in favor of
-  OccupancyRecord(zone_id FK). Repository/service/API/frontend rewrite to
-  follow in a separate prompt — not yet done as of this entry.
 
 ---
 
@@ -287,3 +325,8 @@ that, v1 before v2, always.
   bug, not the fix; retested and confirmed correct. Occupancy fully closed.
   Chunk 2 remaining open item is Security only (dead ML path, needs DB
   schema change + retrain + seeder rewrite) — not yet started.
+**2026-08-19**: Occupancy data/service layer fully repaired and verified
+end-to-end (zone generation → seeding → agent analysis → alert). App now
+boots cleanly — this was the ImportError blocking startup since the last
+schema migration. Next: Occupancy dashboard (spatial heatmap, room/building
+utilization, overcrowding alerts panel).
