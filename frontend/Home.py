@@ -23,7 +23,7 @@ st.set_page_config(
 # Initialize global state
 initialize_session()
 
-st.title("🏢 **Agentic FacilityOPS AI Platform**")
+st.title("**Agentic FacilityOPS AI Platform**")
 st.markdown("### Executive Operations Center")
 
 # Integration Test: Fetch backend health
