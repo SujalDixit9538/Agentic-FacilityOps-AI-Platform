@@ -38,7 +38,7 @@ with st.sidebar:
     st.markdown("### ⚙️ Module Controls")
     
     # Fetch facilities from backend
-    resp = safe_get("/maintenance/facilities")
+    resp = safe_get("/maintenance/facilities", fallback_data={"facilities": ["F-0000", "F-0001"]})
     facilities = resp.get("data", {}).get("facilities", ["F-0000", "F-0001"])
     
     seed_facility = st.selectbox("Target Facility", facilities, key="maint_seed_target")
@@ -58,7 +58,7 @@ with st.sidebar:
             else:
                 st.error("Ingestion pipeline failed.")
 
-st.title(f"🔧 Predictive Maintenance: {seed_facility}")
+st.title(f"Predictive Maintenance: {seed_facility}")
 
 # Facility Selection
 selected_facility = seed_facility

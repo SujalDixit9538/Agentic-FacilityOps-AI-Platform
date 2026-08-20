@@ -72,11 +72,11 @@ with col1:
                 df_occ = df_occ.sort_values('timestamp')
                 
                 # Calculate and display current total headcount
-                latest_headcount = df_occ.groupby('room')['occupancy_count'].last().sum()
+                latest_headcount = df_occ.groupby('zone_id')['occupancy_count'].last().sum()
                 st.metric("Current Estimated Headcount", int(latest_headcount))
                 
                 # Format dates for cleaner UI
-                df_display = df_occ[['timestamp', 'floor', 'room', 'occupancy_count']].copy()
+                df_display = df_occ[['timestamp', 'zone_id', 'occupancy_count']].copy()
                 df_display['timestamp'] = df_display['timestamp'].dt.strftime('%m-%d %H:%M')
                 st.dataframe(df_display, use_container_width=True, hide_index=True)
         else:

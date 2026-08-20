@@ -9,7 +9,7 @@ from backend.schemas.occupancy import (
     OccupancyRecordResponse, OccupancyZoneResponse,
     OccupancyImageBase, OccupancyImageResponse, SecurityEventResponse,
 )
-from backend.schemas.dashboard import OccupancyDashboardResponse
+from backend.schemas.dashboard import OccupancyDashboardEnvelope
 from backend.utils.api_responses import success_response
 
 # NOTE: no prefix here — router.py's include_router(occupancy.router, prefix="/occupancy", ...)
@@ -88,7 +88,7 @@ async def analyze_facility_security(facility_id: str, db: Session = Depends(get_
     return success_response(message=f"Occupancy and Security analysis completed for {facility_id}", data=insights)
 
 
-@router.get("/dashboard/{facility_id}")
+@router.get("/dashboard/{facility_id}", response_model=OccupancyDashboardEnvelope)
 async def get_dashboard_data(facility_id: str, db: Session = Depends(get_db)):
     """Aggregated dashboard metrics for the Occupancy UI."""
     service = OccupancyService(db)

@@ -50,6 +50,35 @@ class OccupancyService:
     def get_security_logs(self, facility_id: str, limit: int = 50):
         return self.repository.get_security_events(facility_id, limit)
 
+    def get_occupancy_history(self, facility_id: str, days: int = 30):
+        import datetime
+        from sqlalchemy import func
+        from backend.database.models.occupancy import OccupancyRecord
+        limit_date = datetime.datetime.now() - datetime.timedelta(days=days)
+
+        # Get historical average occupancy per day
+        records = self.repository.db.query(
+            func.date(OccupancyRecord.timestamp).label("date"),
+            func.sum(OccupancyRecord.occupancy_count).label("total_occ")
+        ).filter(
+            OccupancyRecord.facility_id == facility_id,
+            OccupancyRecord.timestamp >= limit_date
+        ).group_by(func.date(OccupancyRecord.timestamp)).order_by(func.date(OccupancyRecord.timestamp)).all()
+
+        zones = self.repository.get_zones_for_facility(facility_id)
+        total_capacity = sum(zone.max_capacity for zone in zones)
+        return [
+            {
+                "timestamp": datetime.datetime.combine(
+                    r.date if isinstance(r.date, datetime.date) else datetime.date.fromisoformat(r.date),
+                    datetime.time.min,
+                ),
+                "occupancy": r.total_occ,
+                "utilization_percent": round((r.total_occ / total_capacity * 100) if total_capacity > 0 else 0, 1),
+            }
+            for r in records
+        ]
+
     def log_security_event(self, data: SecurityEventBase):
         return self.repository.create_security_event(data)
 
@@ -73,15 +102,16 @@ class OccupancyService:
         
         zone_info = []
         alerts = []
+        zone_analytics = {}
         
         for zone in zones:
             record = latest_records.get(zone.zone_id)
             occ = record.occupancy_count if record else 0
             cap = zone.max_capacity
             util = (occ / cap * 100) if cap > 0 else 0
-            
+
             # Status
-            if occ > cap:
+            if occ >= cap:
                 status = "OVERCROWDED"
                 overcrowded += 1
                 alerts.append({
@@ -89,7 +119,7 @@ class OccupancyService:
                     "severity": "HIGH",
                     "zone_id": zone.zone_id,
                     "zone_name": zone.zone_name,
-                    "message": f"{zone.zone_name} exceeds configured capacity.",
+                    "message": f"{zone.zone_name} is at capacity.",
                     "utilization_percent": round(util, 1)
                 })
             elif util >= 80:
@@ -113,10 +143,14 @@ class OccupancyService:
                 "x_position": zone.x_position,
                 "y_position": zone.y_position
             })
-            
+
+            zone_analytics.setdefault(zone.zone_type, {"occupancy": 0, "capacity": 0})
+            zone_analytics[zone.zone_type]["occupancy"] += occ
+            zone_analytics[zone.zone_type]["capacity"] += cap
+
             total_occ += occ
             total_cap += cap
-            
+
         return {
             "facility_id": facility_id,
             "summary": {
@@ -128,8 +162,22 @@ class OccupancyService:
                 "underutilized_zones": under
             },
             "zones": zone_info,
-            "room_utilization": [z for z in zone_info if z['zone_type'] == 'meeting_room'],
-            "zone_analytics": [], # Placeholder
+            "room_utilization": [
+                z for z in zone_info if z["zone_type"] in {"meeting_room", "room"}
+            ],
+            "zone_analytics": [
+                {
+                    "zone_type": zone_type,
+                    "occupancy": values["occupancy"],
+                    "capacity": values["capacity"],
+                    "utilization_percent": round(
+                        values["occupancy"] / values["capacity"] * 100
+                        if values["capacity"] > 0 else 0,
+                        1,
+                    ),
+                }
+                for zone_type, values in sorted(zone_analytics.items())
+            ],
             "alerts": alerts,
-            "trend": [] # Placeholder
+            "trend": self.get_occupancy_history(facility_id)
         }

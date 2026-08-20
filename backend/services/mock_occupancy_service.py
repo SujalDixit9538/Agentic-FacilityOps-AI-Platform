@@ -80,6 +80,7 @@ def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: in
     days = 30
     base_time = datetime.datetime.utcnow() - datetime.timedelta(days=days)
     occ_created = 0
+    meeting_room_zones = [zone for zone in zones if zone.zone_type == "meeting_room"]
 
     for i in range(days * 24):
         current_time = base_time + datetime.timedelta(hours=i)
@@ -96,11 +97,11 @@ def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: in
 
             # Demo Scenarios
             if i == (days * 24 - 1):
-                if zone.zone_type == "meeting_room" and "Meeting Room A" in zone.zone_name:
-                    count = int(zone.max_capacity * 1.05)
-                elif zone.zone_type == "office_floor":
+                if zone.zone_type == "office_floor":
                     count = int(zone.max_capacity * 0.82)
-                elif zone.zone_type == "meeting_room" and "Meeting Room B" in zone.zone_name:
+                elif meeting_room_zones and zone is meeting_room_zones[0]:
+                    count = max(zone.max_capacity + 1, int(zone.max_capacity * 1.05))
+                elif len(meeting_room_zones) > 1 and zone is meeting_room_zones[1]:
                     count = int(zone.max_capacity * 0.25)
 
             record_data = OccupancyRecordBase(

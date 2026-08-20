@@ -33,6 +33,7 @@ class AlertInfo(BaseModel):
 class TrendInfo(BaseModel):
     timestamp: datetime
     occupancy: int
+    utilization_percent: float
 
 class OccupancyDashboardResponse(BaseModel):
     facility_id: str
@@ -42,3 +43,8 @@ class OccupancyDashboardResponse(BaseModel):
     zone_analytics: List[dict]
     alerts: List[AlertInfo]
     trend: List[TrendInfo]
+
+class OccupancyDashboardEnvelope(BaseModel):
+    success: bool
+    message: str
+    data: OccupancyDashboardResponse

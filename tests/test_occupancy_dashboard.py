@@ -23,7 +23,7 @@ def test_dashboard_logic(db_session):
     db_session.commit()
     
     # Setup records
-    # Test 1: 20/20 -> 100% (High)
+    # Test 1: 20/20 -> 100% (Overcrowded)
     # Test 2: 21/20 -> 105% (Overcrowded, High Alert)
     # Test 3: 5/10 -> 50% (Normal)
     
@@ -40,7 +40,7 @@ def test_dashboard_logic(db_session):
     
     # Verify zone Z1
     z1 = next(z for z in data['zones'] if z['zone_id'] == 'Z1')
-    assert z1['status'] == "HIGHLY_UTILIZED"
+    assert z1['status'] == "OVERCROWDED"
     assert z1['utilization_percent'] == 100.0
     
     # Verify zone Z2
@@ -53,5 +53,9 @@ def test_dashboard_logic(db_session):
     
     # Verify summary
     assert data['summary']['total_occupants'] == 46
-    assert data['summary']['overcrowded_zones'] == 1
-    assert data['summary']['highly_utilized_zones'] == 1
+    assert data['summary']['overcrowded_zones'] == 2
+    assert data['summary']['highly_utilized_zones'] == 0
+    assert data['room_utilization']
+    assert data['zone_analytics']
+    assert data['trend']
+    assert all("utilization_percent" in point for point in data['trend'])
