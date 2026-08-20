@@ -19,15 +19,34 @@ st.set_page_config(page_title="Occupancy & Security Intelligence | FacilityOPS",
 with st.sidebar:
     st.markdown("### ⚙️ Module Controls")
     seed_facility = st.selectbox("Target Facility", ["FAC-001", "FAC-002"], key="occ_seed_target")
+    selected_facility = st.session_state.get('occ_seed_target', 'FAC-001')
     if st.button("🔄 Refresh Data Ingestion", use_container_width=True):
         with st.spinner("Provisioning data..."):
             safe_post("/occupancy/seed", params={"facility_id": seed_facility, "days": 7})
             st.rerun()
 
+from datetime import datetime
+import plotly.express as px
+from frontend.services.api_client import safe_get, safe_post
+from frontend.components.status import render_status_banner, render_empty_state
+
+# Professional Styling
+st.set_page_config(page_title="Occupancy & Security Intelligence | FacilityOPS", layout="wide")
+
+st.markdown("""
+<style>
+    .kpi-card { background-color: #f8f9fa; border-radius: 8px; padding: 15px; border: 1px solid #e9ecef; }
+    .kpi-value { font-size: 24px; font-weight: bold; }
+    .kpi-label { font-size: 14px; color: #6c757d; }
+    .alert-card { padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 5px solid; }
+    .alert-high { border-left-color: #dc3545; background-color: #f8d7da; }
+    .alert-med { border-left-color: #fd7e14; background-color: #fff3cd; }
+</style>
+""", unsafe_allow_html=True)
+
 # 1. Header
-st.title("Occupancy & Security Intelligence")
-st.markdown("Operational dashboard monitoring facility utilization, overcrowding and physical security events.")
-selected_facility = st.sidebar.selectbox("Select Facility", ["FAC-001", "FAC-002"])
+st.title("Occupancy & Security")
+st.markdown(f"**Facility:** {st.session_state.get('occ_seed_target', 'FAC-001')} | **Time:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 st.divider()
 
 # API Data Fetch
@@ -42,26 +61,26 @@ if not success:
 summary = data.get("summary", {})
 
 # 2. Top KPI row
-kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-kpi1.metric("Total Occupants", summary.get('total_occupants', 0))
-kpi2.metric("Facility Utilization", f"{summary.get('utilization_percent', 0)}%")
-kpi3.metric("Overcrowded Zones", summary.get('overcrowded_zones', 0))
-kpi4.metric("Active Alerts", len(data.get('alerts', [])))
-
+cols = st.columns(4)
+cols[0].markdown(f'<div class="kpi-card"><div class="kpi-label">Total Occupants</div><div class="kpi-value">{summary.get("total_occupants", 0)} / {summary.get("total_capacity", 0)}</div></div>', unsafe_allow_html=True)
+cols[1].markdown(f'<div class="kpi-card"><div class="kpi-label">Utilization</div><div class="kpi-value">{summary.get("utilization_percent", 0)}%</div></div>', unsafe_allow_html=True)
+cols[2].markdown(f'<div class="kpi-card"><div class="kpi-label">Overcrowded Zones</div><div class="kpi-value" style="color: {"red" if summary.get("overcrowded_zones", 0) > 0 else "black"}">{summary.get("overcrowded_zones", 0)}</div></div>', unsafe_allow_html=True)
+cols[3].markdown(f'<div class="kpi-card"><div class="kpi-label">Active Alerts</div><div class="kpi-value">{len(data.get("alerts", []))}</div></div>', unsafe_allow_html=True)
 st.divider()
 
-# 3. Live Occupancy Heatmap
+
+# 3. Primary Spatial Occupancy Map
 st.markdown("### 🗺️ Live Occupancy Heatmap")
 zones = data.get("zones", [])
 if zones:
-    cols = st.columns(min(len(zones), 4))
-    for i, zone in enumerate(zones):
-        with cols[i % 4]:
-            util = zone.get('utilization_percent', 0)
-            status_color = "🔴" if util > 90 else "🟠" if util > 70 else "🟢"
-            st.info(f"**{zone['zone_name']}**\n\n{status_color} {util}% Utilization")
+    df_zones = pd.DataFrame(zones)
+    fig = px.scatter(df_zones, x="x_position", y="y_position", color="utilization_percent", 
+                     size="capacity", hover_name="zone_name", color_continuous_scale="RdYlGn_r")
+    fig.update_layout(showlegend=False, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+    st.plotly_chart(fig, use_container_width=True)
 else:
     st.info("No zone data available.")
+
 
 
 
@@ -84,30 +103,40 @@ with c2:
     else:
         st.info("No room data.")
 
-# 5. Alerts
+# 6. Occupancy Alerts
 st.markdown("### ⚠️ Occupancy Alerts")
 alerts = data.get("alerts", [])
 if alerts:
     for al in alerts:
-        st.error(f"**{al['severity']}** | {al['zone_name']}: {al['message']}")
+        css_class = "alert-high" if al['severity'] == 'High' else "alert-med"
+        st.markdown(f'<div class="alert-card {css_class}">**{al["severity"]}** | {al["zone_name"]}: {al["message"]}</div>', unsafe_allow_html=True)
 else:
     st.success("No active occupancy alerts.")
 
-# 6. Security Operations
+# 7. Security Operations
 st.markdown("### 🔒 Security Operations")
 sec_data = safe_get(f"/occupancy/security/{selected_facility}")
 sec_events = sec_data.get("data", {}).get("events", [])
 if sec_events:
-    df_sec = pd.DataFrame(sec_events)
-    st.dataframe(df_sec, use_container_width=True)
+    for event in sec_events:
+        st.write(f"- {event.get('timestamp', 'N/A')} | {event.get('description', 'N/A')}")
 else:
     st.info("No security events.")
 
-# 7. Agent Intelligence
-st.markdown("### 🤖 Intelligence Engine")
-if st.button("Run Facility Analysis", type="primary"):
-    analysis = safe_get(f"/occupancy/analyze/{selected_facility}")
-    if analysis.get("success"):
-        st.write(analysis.get("data"))
-    else:
-        st.error("Analysis failed.")
+
+# 5. AI Operations Desk
+st.markdown("### 🤖 AI Operations Desk")
+analysis = safe_get(f"/occupancy/analyze/{selected_facility}").get("data", {})
+if analysis:
+    col_ai1, col_ai2 = st.columns([1, 1])
+    with col_ai1:
+        st.markdown("#### Facility Status")
+        st.write(f"Status: {analysis.get('status', 'N/A')}")
+        st.write(f"Anomalies: {analysis.get('anomalies_detected', 0)}")
+    with col_ai2:
+        st.markdown("#### Recommended Actions")
+        for rec in analysis.get('recommendations', []):
+            st.write(f"- **{rec['priority']}**: {rec['action']}")
+else:
+    st.info("No AI analysis available.")
+
