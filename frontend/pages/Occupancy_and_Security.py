@@ -35,12 +35,18 @@ st.set_page_config(page_title="Occupancy & Security Intelligence | FacilityOPS",
 
 st.markdown("""
 <style>
-    .kpi-card { background-color: #f8f9fa; border-radius: 8px; padding: 15px; border: 1px solid #e9ecef; }
-    .kpi-value { font-size: 24px; font-weight: bold; }
-    .kpi-label { font-size: 14px; color: #6c757d; }
-    .alert-card { padding: 10px; border-radius: 5px; margin-bottom: 5px; border-left: 5px solid; }
-    .alert-high { border-left-color: #dc3545; background-color: #f8d7da; }
-    .alert-med { border-left-color: #fd7e14; background-color: #fff3cd; }
+    .kpi-card { 
+        background-color: var(--secondary-background-color); 
+        border-radius: 10px; 
+        padding: 20px; 
+        border: 1px solid var(--border-color); 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+    }
+    .kpi-value { font-size: 28px; font-weight: 700; color: #212529; }
+    .kpi-label { font-size: 13px; color: #495057; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+    .alert-card { padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 6px solid; color: #212529; font-weight: 500; }
+    .alert-high { border-left-color: #dc3545; background-color: #f8d7da; color: #721c24; }
+    .alert-med { border-left-color: #fd7e14; background-color: #fff3cd; color: #856404; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -109,9 +115,9 @@ alerts = data.get("alerts", [])
 if alerts:
     for al in alerts:
         css_class = "alert-high" if al['severity'] == 'High' else "alert-med"
-        st.markdown(f'<div class="alert-card {css_class}">**{al["severity"]}** | {al["zone_name"]}: {al["message"]}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="alert-card {css_class}"><strong>{al["severity"]} Alert</strong><br>{al["zone_name"]}: {al["message"]}</div>', unsafe_allow_html=True)
 else:
-    st.success("No active occupancy alerts.")
+    st.info("No active occupancy alerts.")
 
 # 7. Security Operations
 st.markdown("### 🔒 Security Operations")
