@@ -27,7 +27,7 @@ class OccupancyRepository:
 
     def create_occupancy_record(self, data: OccupancyRecordBase):
         db_record = OccupancyRecord(
-            occupancy_id=f"OCC-{uuid.uuid4().hex[:6].upper()}",
+            occupancy_id=f"OCC-{uuid.uuid4().hex[:12].upper()}",
             **data.model_dump()
         )
         self.db.add(db_record)
@@ -54,7 +54,7 @@ class OccupancyRepository:
 
     def create_image_record(self, data: OccupancyImageBase):
         db_img = OccupancyImage(
-            image_id=f"IMG-{uuid.uuid4().hex[:6].upper()}",
+            image_id=f"IMG-{uuid.uuid4().hex[:12].upper()}",
             **data.model_dump()
         )
         self.db.add(db_img)
