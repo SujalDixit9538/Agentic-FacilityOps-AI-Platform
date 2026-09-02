@@ -17,6 +17,8 @@ class AppSettings(BaseSettings):
 
     GEMINI_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None
+    CARBON_EMISSION_FACTOR_KG_PER_KWH: float = 0.4
+    AUTO_SEED_DEMO_DATA: bool = True
     
     class Config:
         env_file = ".env"

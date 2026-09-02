@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import List, Optional
 
@@ -43,8 +43,16 @@ class OccupancyDashboardResponse(BaseModel):
     zone_analytics: List[dict]
     alerts: List[AlertInfo]
     trend: List[TrendInfo]
+    provenance: dict = Field(default_factory=dict)
+    freshness: dict = Field(default_factory=dict)
+    degraded: bool = False
+    quality_flags: List[str] = Field(default_factory=list)
 
 class OccupancyDashboardEnvelope(BaseModel):
     success: bool
     message: str
     data: OccupancyDashboardResponse
+    provenance: dict = Field(default_factory=dict)
+    freshness: dict = Field(default_factory=dict)
+    degraded: bool = False
+    quality_flags: List[str] = Field(default_factory=list)

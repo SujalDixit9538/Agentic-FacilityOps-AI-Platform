@@ -1,146 +1,121 @@
 import sys
 from pathlib import Path
-import streamlit as st
 
+import pandas as pd
+import plotly.express as px
+import streamlit as st
 
 root_dir = str(Path(__file__).parent.parent.parent.absolute())
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
+from frontend.components.status import render_empty_state, render_status_banner
+from frontend.services.api_client import safe_get, safe_patch, safe_post
+from frontend.services.page_data import get_facilities, metadata, state_message
 
-import pandas as pd
-from frontend.services.api_client import safe_get, safe_post
-from frontend.components.status import render_status_banner, render_empty_state
+st.set_page_config(page_title="Cost | FacilityOPS", layout="wide")
+st.title("Cost Operations")
+st.caption("Understand spend, budget pressure, and the next financial decisions for one facility.")
 
-# Page Configuration
-st.set_page_config(page_title="Cost Optimization | FacilityOPS", layout="wide")
+facilities, _ = get_facilities()
+if not facilities:
+    render_status_banner(False, "No facilities are available from the canonical catalog.")
+    st.stop()
 
+selected_facility = st.selectbox("Facility", facilities, key="cost_facility")
 with st.sidebar:
-    st.markdown("### ⚙️ Module Controls")
-    st.info("Simulate facility financial records and historical expenses.")
-    
-    seed_facility = st.selectbox("Target Facility", ["FAC-001", "FAC-002"], key="cost_seed_target")
-    
-    if st.button("🔄 Trigger Finance Ingestion", use_container_width=True):
-        with st.spinner("Provisioning financial ledgers..."):
-            res = safe_post("/cost/seed", params={"facility_id": seed_facility, "months": 6})
-            if res.get("success"):
-                st.success(f"Ingested {res['data']['financial_records_seeded']} financial records.")
-                st.rerun() 
-            else:
-                st.error("Ingestion pipeline failed.")
+    st.subheader("Data operations")
+    if st.button("Ingest financial data", icon="🔄", width="stretch"):
+        result = safe_post("/cost/seed", params={"facility_id": selected_facility, "months": 6})
+        if result.get("success"):
+            st.success("Financial data ingested.")
+            st.rerun()
+        else:
+            st.error(result.get("message", "Financial ingestion failed."))
 
+dashboard = safe_get(f"/cost/dashboard/{selected_facility}", fallback_data={})
+if message := state_message(dashboard):
+    render_status_banner(dashboard.get("success", False), message)
+if not dashboard.get("success"):
+    st.stop()
 
-st.title("💰 Cost Optimization")
-st.markdown("Track, analyze, and optimize facility operating expenses.")
+data = dashboard.get("data") or {}
+categories = data.get("categories") or []
+st.markdown(f"### {selected_facility}")
+freshness = metadata(dashboard)["freshness"]
+st.caption(
+    f"Operational status: {'Degraded' if dashboard.get('degraded') else 'Available'} | "
+    f"Data as of: {freshness.get('as_of') or 'not reported'} | "
+    f"Source: {metadata(dashboard)['provenance'].get('source', 'not reported')}"
+)
 
-# 1. Module Health Check Integration
-health_data = safe_get("/cost/health")
-is_online = health_data.get("success", False)
+if not categories:
+    render_empty_state("Financial tracking", "No verified cost data has been received for this facility.")
+    st.info("Use the data operation in the sidebar when a demo ledger is required.")
+    st.stop()
 
-if not is_online:
-    render_status_banner(
-        is_online=False, 
-        custom_message="Cost API is currently unreachable. Displaying cached layout."
-    )
-    st.stop() # Halts execution safely
+frame = pd.DataFrame(categories)
+total = float(frame["total_amount"].sum())
+record_count = int(frame["record_count"].sum())
+largest = frame.loc[frame["total_amount"].idxmax(), "category"]
+cols = st.columns(4)
+cols[0].metric("Spend in reported period", f"${total:,.2f}")
+cols[1].metric("Transactions", f"{record_count:,}")
+cols[2].metric("Largest category", str(largest))
+cols[3].metric("Budget variance", "Not reported", help="Budget data is not part of the current API contract.")
 
-status_info = health_data.get("data", {})
-if status_info.get("status") == "operational":
-    st.success(f"Module Status: Operational")
-    # st.success(f"Module Status: Operational | Intelligence Engine: {status_info.get('intelligence_engine', 'Pending')}")
+left, right = st.columns([3, 2])
+with left:
+    st.subheader("Spend by category")
+    chart = px.bar(frame, x="category", y="total_amount", color="category", labels={"total_amount": "Amount"})
+    chart.update_layout(showlegend=False, yaxis_tickprefix="$", margin=dict(l=10, r=10, t=10, b=10))
+    st.plotly_chart(chart, width="stretch", config={"displayModeBar": False})
+with right:
+    st.subheader("Data quality")
+    if dashboard.get("degraded"):
+        st.warning("This summary is degraded. Validate the quality flags before acting.")
+    else:
+        st.success("Summary is available from an aggregate query.")
+    for flag in metadata(dashboard)["quality_flags"]:
+        st.caption(flag.replace("_", " ").title())
 
 st.divider()
+st.subheader("Recommendations")
+if st.button("Run cost analysis", type="primary", width="content"):
+    with st.spinner("Preparing the latest cost recommendations..."):
+        st.session_state[f"cost_analysis_{selected_facility}"] = safe_get(f"/cost/analyze/{selected_facility}")
 
-# 2. Facility Selection
-selected_facility = st.selectbox("Select Target Facility", ["FAC-001", "FAC-002"])
-
-# 3. Data Retrieval & Visualization
-st.markdown("### 📊 Expense Breakdown")
-with st.spinner("Loading financial records..."):
-    cost_response = safe_get(f"/cost/records/{selected_facility}?limit=100")
-    
-    if cost_response.get("success"):
-        records = cost_response.get("data", {}).get("records", [])
-        
-        if not records:
-            render_empty_state("Financial Tracking", "No cost data recorded for this facility yet. Awaiting ingestion.")
-        else:
-            df_costs = pd.DataFrame(records)
-            df_costs['incurred_date'] = pd.to_datetime(df_costs['incurred_date']).dt.strftime('%Y-%m-%d')
-            
-            # Calculate High-Level Metrics
-            total_cost = df_costs['amount'].sum()
-            st.metric("Total Incurred Expenses", f"${total_cost:,.2f}")
-            
-            # Layout for charts and tables
-            col1, col2 = st.columns([1, 2])
-            
-            with col1:
-                st.markdown("#### Cost by Category")
-                category_totals = df_costs.groupby('category')['amount'].sum().reset_index()
-                # Format currency for display
-                category_totals['amount'] = category_totals['amount'].apply(lambda x: f"${x:,.2f}")
-                st.dataframe(category_totals, use_container_width=True, hide_index=True)
-            
-            with col2:
-                st.markdown("#### Recent Transactions")
-                # Format currency for display
-                df_display = df_costs[['record_id', 'category', 'description', 'amount', 'incurred_date']].copy()
-                df_display['amount'] = df_display['amount'].apply(lambda x: f"${x:,.2f}")
-                st.dataframe(df_display, use_container_width=True, hide_index=True)
-    else:
-        st.error("Failed to retrieve cost records.")
-
-# 4. Agentic Intelligence Section
-st.markdown("### 🤖 Intelligence Engine: Cost Optimization Agent")
-st.info("The Agent continuously analyzes historical ledgers to identify budget overruns and utility cost spikes.")
-
-if st.button("🧠 Run Financial Analysis", type="primary", use_container_width=True):
-    with st.spinner(f"Agent is evaluating financial health for {selected_facility}..."):
-        analysis_response = safe_get(f"/cost/analyze/{selected_facility}")
-        
-        if analysis_response.get("success"):
-            insights = analysis_response.get("data", {})
-            alerts = insights.get("alerts", [])
-            recommendations = insights.get("recommendations", [])  # <-- Extract new recommendations data
-            analysis_data = insights.get("analysis", {})
-            financial_status = analysis_data.get("financial_status", "Unknown")
-            metrics = analysis_data.get("metrics", {})
-            
-            # Display Financial Status
-            status_color = "green" if financial_status == "Optimized" else "orange" if financial_status == "Review Required" else "red"
-            st.markdown(f"#### Overall Financial Status: :{status_color}[{financial_status}]")
-            
-            # Display Key Metrics
-            if "latest_energy_variance" in metrics:
-                variance = metrics["latest_energy_variance"]
-                st.metric("Latest Energy Variance (MoM)", f"{variance}%", delta=f"{variance}%", delta_color="inverse")
-            
-            # Render Anomalies / Alerts
-            if alerts:
-                st.error(f"⚠️ Agent flagged {len(alerts)} financial anomalies.")
-                for alert in alerts:
-                    with st.expander(f"[{alert['severity'].upper()}] {alert['type']} (Click for details)"):
-                        st.write(f"**Message:** {alert['message']}")
-                        st.caption(f"Generated by: {alert['source']} | ID: {alert['alert_id']}")
+analysis_response = st.session_state.get(f"cost_analysis_{selected_facility}")
+if not analysis_response:
+    st.info("Run an analysis when you are ready to review persisted recommendations.")
+elif not analysis_response.get("success"):
+    st.error(analysis_response.get("message", "Cost analysis is unavailable."))
+else:
+    analysis_data = analysis_response.get("data") or {}
+    analysis = analysis_data.get("analysis") or {}
+    metrics = analysis.get("metrics") or {}
+    savings = metrics.get("predicted_savings_usd")
+    if savings is not None:
+        st.metric("Estimated savings", f"${float(savings):,.2f}")
+    elif analysis_response.get("degraded"):
+        st.warning("Savings cannot be responsibly estimated from the available data.")
+    if reason := metrics.get("degradation_reason"):
+        st.warning(f"Analysis degraded: {reason}")
+    recommendations = analysis_data.get("recommendations") or []
+    if not recommendations:
+        st.info("No verified recommendations were returned.")
+    for recommendation in recommendations:
+        recommendation_id = recommendation.get("recommendation_id")
+        with st.container(border=True):
+            st.markdown(f"**{recommendation.get('action', 'Recommendation')}**")
+            st.caption(f"Priority: {recommendation.get('priority', 'Not reported')} | Trigger: {recommendation.get('trigger', 'Not reported')}")
+            if recommendation_id:
+                status = st.selectbox("Status", ["proposed", "accepted", "completed", "dismissed"], key=f"rec_status_{recommendation_id}")
+                if st.button("Save status", key=f"save_rec_{recommendation_id}", width="content"):
+                    result = safe_patch(f"/cost/recommendations/{recommendation_id}", {"status": status})
+                    if result.get("success"):
+                        st.success("Recommendation status saved.")
+                    else:
+                        st.error(result.get("message", "Recommendation update failed."))
             else:
-                st.success("✅ No critical budget anomalies detected. Facility spending is optimized.")
-
-            
-            # Render Actionable Recommendations
-            st.markdown("#### 📉 Recommended Cost Reductions")
-            if recommendations:
-                for rec in recommendations:
-                    # Map priority to Streamlit text colors for quick scanning
-                    priority_color = "red" if rec.get('priority') == "High" else "orange" if rec.get('priority') == "Medium" else "green"
-                    
-                    st.markdown(f"- **{rec.get('action')}** (Priority: :{priority_color}[{rec.get('priority', 'Low')}])")
-                    if 'trigger' in rec:
-                        st.caption(f"&nbsp;&nbsp;&nbsp;&nbsp;*Mitigates: {rec.get('trigger')}*")
-            else:
-                st.info("No specific cost reduction strategies required at this time.")
-            
-
-        else:
-            st.error("Agent analysis failed to execute or backend is unreachable.")
+                st.caption("This recommendation has no persisted identifier and cannot be updated.")

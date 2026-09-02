@@ -73,10 +73,9 @@
 
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import pandas as pd
 import numpy as np
-import os
 from pathlib import Path
 from typing import List, Dict, Any
 import joblib
@@ -99,7 +98,7 @@ class CostAnalyzer:
         self.savings_model = None
 
     def _models_dir(self) -> Path:
-        return Path(os.getcwd()) / "models"
+        return Path(__file__).resolve().parents[3] / "models"
 
     def _load_models(self) -> None:
         if self._models_loaded:
@@ -109,11 +108,19 @@ class CostAnalyzer:
         try:
             action_path = base / "cost_action_model_v1.joblib"
             savings_path = base / "cost_savings_model_v1.joblib"
+            feature_path = base / "cost_model_features.joblib"
 
             if action_path.exists():
                 self.action_model = joblib.load(action_path)
             if savings_path.exists():
                 self.savings_model = joblib.load(savings_path)
+
+            expected_features = joblib.load(feature_path)
+            model_features = list(getattr(self.action_model, "feature_names_in_", []))
+            if not model_features or model_features != list(expected_features):
+                raise ValueError("Cost model feature metadata does not match the action model.")
+            if list(getattr(self.savings_model, "feature_names_in_", [])) != model_features:
+                raise ValueError("Cost model feature metadata does not match the savings model.")
 
             self._models_loaded = True
             logger.info("Cost Prescriptive ML models loaded successfully.")
@@ -121,11 +128,16 @@ class CostAnalyzer:
             logger.exception("Failed to load Cost ML models: %s", e)
             self._models_loaded = False
 
-    def analyze_financial_health(self, cost_records: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def analyze_financial_health(
+        self,
+        cost_records: List[Dict[str, Any]],
+        facility_state: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
         """Analyzes historical costs and prescribes future optimizations via ML."""
         anomalies = []
         metrics = {"total_records_evaluated": len(cost_records)}
-        intelligence_source = "Rule-Based Fallback"
+        intelligence_source = "Rules Only"
+        degradation_reason = None
 
         if not cost_records:
             logger.warning("CostAnalyzer received empty dataset.")
@@ -176,20 +188,16 @@ class CostAnalyzer:
         try:
             self._load_models()
             if self.action_model is not None and self.savings_model is not None:
-                # In a true unified architecture, the orchestrator passes real-time facility states here.
-                # We safely extract these if provided, otherwise we use fallback mock states to ensure the ML fires.
-                latest = cost_records[-1]
-                current_hour = datetime.utcnow().hour
-                
-                safe_get = lambda col, default: float(latest[col]) if col in latest else default
-                
-                # Cross-domain state matrix required by our Kaggle models
+                if not facility_state or not facility_state.get("is_complete"):
+                    degradation_reason = "complete_cross_domain_state_unavailable"
+                    raise RuntimeError(degradation_reason)
+
                 features_df = pd.DataFrame([{
-                    'energy_load': safe_get('current_energy_load', 310.0), # High load fallback
-                    'asset_health': safe_get('avg_asset_health', 55.0),    # Degrading health fallback
-                    'occupancy_pct': safe_get('current_occupancy_pct', 15.0), # Low occupancy fallback
-                    'hour': current_hour
-                }])
+                    "energy_load": float(facility_state["energy_load"]),
+                    "asset_health": float(facility_state["asset_health"]),
+                    "occupancy_pct": float(facility_state["occupancy_pct"]),
+                    "hour": datetime.now(timezone.utc).hour,
+                }], columns=["energy_load", "asset_health", "occupancy_pct", "hour"])
 
                 # A. Predict Optimal Action (Classification)
                 optimal_action = str(self.action_model.predict(features_df)[0])
@@ -213,6 +221,8 @@ class CostAnalyzer:
                 raise RuntimeError("Prescriptive ML models missing from models/ directory.")
 
         except Exception as e:
+            if degradation_reason is None:
+                degradation_reason = str(e)
             logger.warning("Prescriptive ML analysis failed: %s. Relying purely on historical rules.", e)
 
         # ==========================================
@@ -222,6 +232,8 @@ class CostAnalyzer:
         
         # Attach the intelligence source to the metrics payload for the UI
         metrics["intelligence_source"] = intelligence_source
+        if degradation_reason:
+            metrics["degradation_reason"] = degradation_reason
 
         logger.info(f"Cost analysis complete via {intelligence_source}. Found {len(anomalies)} alerts/recommendations.")
 

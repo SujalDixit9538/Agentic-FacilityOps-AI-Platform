@@ -9,6 +9,7 @@ from backend.schemas.maintenance import AssetResponse, MaintenanceLogResponse
 from backend.schemas.manual_predict import ManualPredictRequest
 from backend.utils.api_responses import success_response
 from backend.agents.maintenance.analyzer import MaintenanceAnalyzer
+from backend.services.facility_catalog_service import FacilityCatalogService
 
 router = APIRouter()
 
@@ -21,10 +22,8 @@ async def maintenance_module_health(db: Session = Depends(get_db)):
 
 @router.get("/facilities")
 async def get_facilities(db: Session = Depends(get_db)):
-    """Returns a list of distinct facility_ids from the assets table."""
-    from backend.database.models.maintenance import Asset
-    facilities = db.query(Asset.facility_id).distinct().all()
-    facility_list = [f[0] for f in facilities]
+    """Returns active facility IDs from the canonical catalog."""
+    facility_list = [f.facility_id for f in FacilityCatalogService(db).list_active()]
     return success_response(message="Retrieved facilities", data={"facilities": facility_list})
 
 @router.post("/seed")

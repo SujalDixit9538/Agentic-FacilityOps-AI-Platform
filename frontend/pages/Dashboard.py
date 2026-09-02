@@ -1,95 +1,92 @@
 import sys
 from pathlib import Path
+
 import streamlit as st
 
 root_dir = str(Path(__file__).parent.parent.parent.absolute())
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
+from frontend.components.status import render_empty_state, render_status_banner
 from frontend.services.api_client import safe_get
+from frontend.services.page_data import get_facilities, metadata, state_message
 
-# Page Configuration
-st.set_page_config(page_title="Executive Dashboard | FacilityOPS", layout="wide")
+st.set_page_config(page_title="Dashboard | FacilityOPS", layout="wide")
+st.title("Facility Operations Overview")
+st.caption("A verified, cross-domain view of the facility state and the decisions waiting for attention.")
 
-st.title("🏢 Executive Platform Summary")
-st.markdown("Unified cross-domain intelligence and facility health orchestration.")
+facilities, _ = get_facilities()
+if not facilities:
+    render_status_banner(False, "The canonical facility catalog is unavailable.")
+    st.stop()
+selected_facility = st.selectbox("Facility", facilities, key="dashboard_facility")
+
+energy = safe_get(f"/energy/dashboard/{selected_facility}", fallback_data={})
+cost = safe_get(f"/cost/dashboard/{selected_facility}", fallback_data={})
+occupancy = safe_get(f"/occupancy/dashboard/{selected_facility}", fallback_data={})
+responses = (("Energy", energy), ("Cost", cost), ("Occupancy & security", occupancy))
+failures = [name for name, response in responses if not response.get("success")]
+if failures:
+    render_status_banner(False, f"Unavailable domains: {', '.join(failures)}. Showing only verified domain data.")
+elif any(response.get("degraded") for _, response in responses):
+    st.warning("Some domain data is degraded or incomplete. Review freshness and quality before acting.")
+
+st.markdown(f"### {selected_facility}")
+status_cols = st.columns(4)
+energy_data = energy.get("data") or {}
+cost_data = cost.get("data") or {}
+occupancy_data = occupancy.get("data") or {}
+occupancy_summary = occupancy_data.get("summary") or {}
+status_cols[0].metric("Energy", f"{energy_data['total_kwh']:,.0f} kWh" if energy.get("success") and energy_data.get("total_kwh") is not None else "Unavailable")
+status_cols[1].metric("Spend", f"${sum(float(item.get('total_amount', 0)) for item in cost_data.get('categories', [])):,.2f}" if cost.get("success") and cost_data.get("categories") else "Unavailable")
+status_cols[2].metric("Utilization", f"{occupancy_summary['utilization_percent']:.1f}%" if occupancy.get("success") and occupancy_summary.get("utilization_percent") is not None else "Unavailable")
+status_cols[3].metric("Health score", "Not reported", help="The current executive response does not expose a component-safe health score.")
+
+st.subheader("Domain status and freshness")
+domain_cols = st.columns(3)
+for column, name, response in zip(domain_cols, ("Energy", "Cost", "Occupancy & security"), (energy, cost, occupancy)):
+    with column:
+        state = "Unavailable" if not response.get("success") else "Degraded" if response.get("degraded") else "Available"
+        st.markdown(f"**{name}: {state}**")
+        st.caption(state_message(response) or f"As of {metadata(response)['freshness'].get('as_of', 'not reported')}")
+        for flag in metadata(response)["quality_flags"]:
+            st.caption(flag.replace("_", " ").title())
+
 st.divider()
-
-# 1. Facility Selection
-selected_facility = st.selectbox("Select Target Facility", ["FAC-001", "FAC-002"])
-
-# 2. Executive Intelligence Trigger
-st.markdown("### 🧠 Platform-Wide Orchestration")
-st.info("The Executive Agent polls the Energy, Maintenance, Occupancy, and Cost modules to synthesize a master facility report.")
-
-if st.button("🌐 Generate Cross-Module Intelligence Report", type="primary", use_container_width=True):
-    with st.spinner(f"Executive Agent is orchestrating analysis for {selected_facility}..."):
-        response = safe_get(f"/executive/analyze/{selected_facility}")
-        
-        if response.get("success"):
-            data = response.get("data", {})
-            status = data.get("executive_status", "Unknown")
-            insights = data.get("executive_insights", {})
-            alerts = data.get("consolidated_alerts", [])
-            recs = data.get("consolidated_recommendations", [])
-            domains = data.get("domain_reports", {})
-            
-            st.divider()
-            
-            # --- 1. Master Platform Status ---
-            status_color = "red" if status == "CRITICAL EMERGENCY" else "orange" if status == "ELEVATED RISK" else "blue" if status == "MODERATE WARNINGS" else "green"
-            st.markdown(f"## Overall Platform Status: :{status_color}[{status}]")
-            
-            # --- 2. AI Executive Insights (GROQ LLM) ---
-            if insights:
-                st.markdown("### 🤖 Agentic AI Summary")
-                st.info(f"**Executive Overview:** {insights.get('executive_summary', 'No summary available.')}")
-                st.success(f"**Strategic Reasoning:** {insights.get('strategic_explanation', 'No explanation available.')}")
-            
-            st.divider()
-            
-            # --- 3. Domain Sub-Reports ---
-            st.markdown("#### Domain Intelligence Metrics")
-            col1, col2, col3 = st.columns(3)
-            col1.metric("Energy Efficiency", f"{domains.get('energy_efficiency', 'N/A')}")
-            col2.metric("Security Threat Level", domains.get('security_threat_level', 'Unknown'))
-            col3.metric("Financial Status", domains.get('financial_status', 'Unknown'))
-            
-            st.divider()
-            
-            # --- 4. Consolidated Alerts Layout ---
-            colA, colB = st.columns(2)
-            
-            with colA:
-                st.markdown(f"#### ⚠️ Active Platform Alerts ({data.get('total_active_alerts', 0)})")
-                if alerts:
-                    for alert in alerts:
-                        severity = alert.get("severity", "Low")
-                        alert_color = "red" if severity == "High" else "orange" if severity == "Medium" else "green"
-                        
-                        # Show which sub-agent generated the alert
-                        source_badge = alert.get("source", "Agent")
-                        
-                        with st.expander(f"[{severity.upper()}] {alert.get('type')} | Origin: {source_badge}"):
-                            st.write(f"**Message:** {alert.get('message')}")
-                            if 'alert_id' in alert:
-                                st.caption(f"Alert ID: {alert.get('alert_id')}")
-                else:
-                    st.success("✅ No active alerts across any domains.")
-            
-            # --- 5. Master Action Plan Layout ---
-            with colB:
-                st.markdown("#### 🛠️ Master Action Plan")
-                if recs:
-                    for rec in recs:
-                        priority = rec.get("priority", "Low")
-                        p_color = "red" if priority == "High" else "orange" if priority == "Medium" else "green"
-                        
-                        st.markdown(f"- **{rec.get('action')}** (Priority: :{p_color}[{priority}])")
-                        if 'trigger' in rec:
-                            st.caption(f"&nbsp;&nbsp;&nbsp;&nbsp;*Addresses: {rec.get('trigger')}*")
-                else:
-                    st.info("No urgent actions required at this time.")
-                    
+st.subheader("Alerts and recommendations")
+report_key = f"executive_report_{selected_facility}"
+if st.button("Generate cross-domain report", type="primary", width="content"):
+    with st.spinner("Compiling the latest verified domain findings..."):
+        st.session_state[report_key] = safe_get(f"/executive/analyze/{selected_facility}")
+report = st.session_state.get(report_key)
+if not report:
+    render_empty_state("Executive report", "No cross-domain report has been generated in this session.")
+elif not report.get("success"):
+    st.error(report.get("message", "Executive analysis is unavailable."))
+else:
+    report_data = report.get("data") or {}
+    st.markdown(f"**Platform status:** {report_data.get('executive_status', 'Not reported')}")
+    alerts = report_data.get("consolidated_alerts") or []
+    recommendations = report_data.get("consolidated_recommendations") or []
+    alert_col, recommendation_col = st.columns(2)
+    with alert_col:
+        st.markdown(f"**Active alerts: {len(alerts)}**")
+        if alerts:
+            for alert in alerts[:8]:
+                st.warning(f"{alert.get('severity', 'Not reported')}: {alert.get('message', 'Alert details unavailable.')}")
         else:
-            st.error("Failed to communicate with the Executive Agent or sub-systems are offline.")
+            st.success("No active alerts were returned.")
+    with recommendation_col:
+        st.markdown(f"**Recommendation queue: {len(recommendations)}**")
+        if recommendations:
+            for recommendation in recommendations[:8]:
+                st.info(f"{recommendation.get('priority', 'Not reported')}: {recommendation.get('action', 'Action details unavailable.')}")
+        else:
+            st.success("No recommendations were returned.")
+    agent_status = report_data.get("agent_status") or {}
+    if agent_status:
+        st.subheader("Agent status")
+        st.dataframe(
+            [{"Agent": name, "Status": value.get("status", "Not reported"), "Latency (ms)": value.get("latency_ms", "Not reported")} for name, value in agent_status.items() if isinstance(value, dict)],
+            width="stretch", hide_index=True,
+        )

@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.sql import over
 from backend.database.models.occupancy import OccupancyRecord, SecurityEvent, OccupancyZone, OccupancyImage
 from backend.schemas.occupancy import OccupancyRecordBase, SecurityEventBase, OccupancyImageBase
 import uuid
@@ -14,16 +15,19 @@ class OccupancyRepository:
         ).order_by(OccupancyRecord.timestamp.desc()).limit(limit).all()
 
     def get_latest_occupancy_by_zone(self, facility_id: str):
-        subq = self.db.query(
-            OccupancyRecord.zone_id,
-            func.max(OccupancyRecord.timestamp).label("max_ts")
-        ).filter(OccupancyRecord.facility_id == facility_id).group_by(OccupancyRecord.zone_id).subquery()
+        ranked = self.db.query(
+            OccupancyRecord,
+            over(
+                func.row_number(),
+                partition_by=OccupancyRecord.zone_id,
+                order_by=(OccupancyRecord.timestamp.desc(), OccupancyRecord.occupancy_id.desc()),
+            ).label("row_number"),
+        ).filter(OccupancyRecord.facility_id == facility_id).subquery()
 
         return self.db.query(OccupancyRecord).join(
-            subq,
-            (OccupancyRecord.zone_id == subq.c.zone_id) &
-            (OccupancyRecord.timestamp == subq.c.max_ts)
-        ).all()
+            ranked,
+            OccupancyRecord.occupancy_id == ranked.c.occupancy_id,
+        ).filter(ranked.c.row_number == 1).all()
 
     def create_occupancy_record(self, data: OccupancyRecordBase):
         db_record = OccupancyRecord(

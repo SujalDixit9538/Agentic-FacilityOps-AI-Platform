@@ -1,5 +1,5 @@
 from typing import Any, Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class StandardResponse(BaseModel):
     """
@@ -9,3 +9,7 @@ class StandardResponse(BaseModel):
     success: bool
     message: str
     data: Optional[Any] = None
+    provenance: dict = Field(default_factory=dict)
+    freshness: dict = Field(default_factory=dict)
+    degraded: bool = False
+    quality_flags: list[str] = Field(default_factory=list)

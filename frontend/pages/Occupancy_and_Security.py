@@ -12,6 +12,7 @@ if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
 from frontend.services.api_client import safe_get
+from frontend.services.page_data import get_facilities
 
 st.set_page_config(
     page_title="Occupancy & Security Intelligence | FacilityOPS",
@@ -168,14 +169,19 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 c1,c2,c3,c4 = st.columns([2.1,1.25,1.25,1.2])
+facility_response = safe_get("/occupancy/facilities", fallback_data={"facilities": []})
+facility_options, facility_response = get_facilities()
+if not facility_options:
+    st.warning("No facilities are available from the canonical catalog.")
+    st.stop()
 with c1:
-    selected_facility = st.selectbox("Facility", ["FAC-001","FAC-002"], key="occ_facility")
+    selected_facility = st.selectbox("Facility", facility_options, key="occ_facility")
 with c2:
     floor_placeholder = st.empty()
 with c3:
     timeframe = st.selectbox("Analytics window", ["24H","7D","30D"], index=0, key="occ_timeframe")
 with c4:
-    if st.button("↻ Refresh", use_container_width=True):
+    if st.button("↻ Refresh", width="stretch"):
         st.cache_data.clear(); st.rerun()
 
 # Real backend endpoints: dashboard, zones, records, security and OccupancyAgent analysis.
@@ -189,8 +195,7 @@ sec_events = (sec_res.get("data") or {}).get("events") or []
 zone_meta_res = safe_get(f"/occupancy/zones/{selected_facility}", fallback_data={"zones":[]})
 zone_meta = (zone_meta_res.get("data") or {}).get("zones") or []
 zone_meta_by_id = {str(z.get("zone_id")): z for z in zone_meta}
-records_res = safe_get(f"/occupancy/records/{selected_facility}?limit=8000", fallback_data={"records":[]})
-records = (records_res.get("data") or {}).get("records") or []
+records = data.get("trend") or []
 
 floor_values = sorted({int(num(z.get("floor"),1)) for z in all_zones})
 floor_options = ["All Floors"] + [f"Floor {f}" for f in floor_values]
@@ -234,16 +239,16 @@ with map_col:
             for tab,floor_no in zip(tabs,floor_values):
                 with tab:
                     floor_zones=[z for z in zones if int(num(z.get("floor"),1))==floor_no]
-                    st.plotly_chart(build_floorplan(floor_zones),use_container_width=True,config={"displayModeBar":False},key=f"map_{selected_facility}_{floor_no}")
+                    st.plotly_chart(build_floorplan(floor_zones),width="stretch",config={"displayModeBar":False},key=f"map_{selected_facility}_{floor_no}")
         else:
-            st.plotly_chart(build_floorplan(zones),use_container_width=True,config={"displayModeBar":False},key=f"map_{selected_facility}_{selected_floor}")
+            st.plotly_chart(build_floorplan(zones),width="stretch",config={"displayModeBar":False},key=f"map_{selected_facility}_{selected_floor}")
         st.markdown('<div class="legend"><span class="legend-item"><span class="legend-dot" style="background:#94a3b8"></span>Low &lt;40%</span><span class="legend-item"><span class="legend-dot" style="background:#14b8a6"></span>Moderate 40–79%</span><span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span>High 80–100%</span><span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>Overcrowded &gt;100%</span></div>',unsafe_allow_html=True)
     else: st.warning("No occupancy zones are available for this facility/floor.")
     st.markdown('</div>',unsafe_allow_html=True)
 
 with ai_col:
     ai_key=f"occ_ai_{selected_facility}"
-    if st.button("⚡ Run Facility Analysis",use_container_width=True,key=f"run_{selected_facility}"):
+    if st.button("⚡ Run Facility Analysis",width="stretch",key=f"run_{selected_facility}"):
         with st.spinner("Occupancy + security agents analyzing telemetry..."):
             analysis_res=safe_get(f"/occupancy/analyze/{selected_facility}",fallback_data={})
             st.session_state[ai_key]=analysis_res.get("data") if analysis_res.get("success") else {}
@@ -325,7 +330,7 @@ if not df.empty:
     fig.add_hline(y=100,line_dash="dot",line_color="#ef4444",annotation_text="Capacity 100%",annotation_position="top left")
     ymax=max(110,float(grouped["utilization"].max())+10) if not grouped.empty else 110
     fig.update_layout(height=320,margin=dict(l=5,r=5,t=8,b=5),paper_bgcolor="#fff",plot_bgcolor="#fff",showlegend=False,hovermode="x unified",xaxis=dict(showgrid=False,title=None),yaxis=dict(showgrid=True,gridcolor="#eef2f7",title="Utilization %",range=[0,ymax]))
-    st.plotly_chart(fig,use_container_width=True,config={"displayModeBar":False})
+    st.plotly_chart(fig,width="stretch",config={"displayModeBar":False})
     peak=float(grouped["utilization"].max()) if not grouped.empty else 0; avg=float(grouped["utilization"].mean()) if not grouped.empty else 0; points=len(grouped)
     peak_color="#ef4444" if peak>100 else "#d97706" if peak>=80 else "#059669"
     st.markdown(f'<div class="detail-grid"><div class="detail-cell"><div class="detail-key">Window average</div><div class="detail-val">{avg:.1f}%</div></div><div class="detail-cell"><div class="detail-key">Peak utilization</div><div class="detail-val" style="color:{peak_color}">{peak:.1f}%</div></div><div class="detail-cell"><div class="detail-key">Telemetry points</div><div class="detail-val">{points}</div></div><div class="detail-cell"><div class="detail-key">Window</div><div class="detail-val">{esc(timeframe)}</div></div></div>',unsafe_allow_html=True)

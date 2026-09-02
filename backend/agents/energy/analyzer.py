@@ -197,6 +197,7 @@ from typing import List, Dict, Any
 
 import joblib
 import numpy as np
+import time
 
 from backend.agents.energy.config import ENERGY_RULES
 
@@ -207,6 +208,8 @@ class EnergyAnalyzer:
     Deterministic rules-engine for Energy Intelligence.
     Hybrid pattern: try ML prediction first, fall back to deterministic rules.
     """
+    _process_models = None
+
     def __init__(self):
         self.peak_threshold = ENERGY_RULES["PEAK_DEMAND_THRESHOLD_KW"]
         self.usage_multiplier = ENERGY_RULES["ABNORMAL_USAGE_MULTIPLIER"]
@@ -226,6 +229,11 @@ class EnergyAnalyzer:
         if self._models_loaded:
             return
 
+        if EnergyAnalyzer._process_models is not None:
+            self.total_model, self.hvac_model, self.feature_names = EnergyAnalyzer._process_models
+            self._models_loaded = True
+            return
+
         base = self._models_dir()
         try:
             total_path = base / "energy_model_total_v1.joblib"
@@ -240,6 +248,7 @@ class EnergyAnalyzer:
                 self.feature_names = joblib.load(features_path)
 
             self._models_loaded = True
+            EnergyAnalyzer._process_models = (self.total_model, self.hvac_model, self.feature_names)
             logger.info("Energy ML models loaded (where available).")
         except Exception as e:
             # Any problem loading models should not break the rules engine
@@ -283,11 +292,44 @@ class EnergyAnalyzer:
             "intelligence_source": "Rule-Based Fallback"
         }
 
+    def _build_feature_frame(self, latest: pd.Series) -> pd.DataFrame:
+        if isinstance(latest, dict):
+            latest = pd.Series(latest)
+        required = {"timestamp", "energy_kwh"}
+        missing = sorted(required - set(latest.index))
+        if missing:
+            raise ValueError(f"missing_energy_features:{','.join(missing)}")
+        temp_cols = [c for c in latest.index if "temp" in c.lower() or "temperature" in c.lower()]
+        if not temp_cols or pd.isna(latest[temp_cols[0]]):
+            raise ValueError("missing_energy_temperature_feature")
+        dt = pd.to_datetime(latest["timestamp"])
+        return pd.DataFrame([{
+            "hour": dt.hour,
+            "day_of_week": dt.dayofweek,
+            "month": dt.month,
+            "is_weekend": int(dt.dayofweek >= 5),
+            "air_temperature": float(latest[temp_cols[0]]),
+        }])
+
     def analyze_consumption(self, records: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Attempts ML prediction first; falls back to deterministic rules on any failure."""
         if not records or len(records) < self.min_data:
             logger.warning("Insufficient data for robust energy analysis.")
-            return {"status": "insufficient_data", "anomalies": [], "metrics": {}, "intelligence_source": "Rule-Based Fallback"}
+            frame = pd.DataFrame(records)
+            energy_values = pd.to_numeric(frame.get("energy_kwh", pd.Series(dtype=float)), errors="coerce").dropna()
+            peak_values = pd.to_numeric(frame.get("peak_demand_kw", pd.Series(dtype=float)), errors="coerce").dropna()
+            return {
+                "status": "insufficient_data",
+                "anomalies": [],
+                "metrics": {
+                    "total_kwh": float(energy_values.sum()) if not energy_values.empty else None,
+                    "peak_kw": float(peak_values.max()) if not peak_values.empty else None,
+                    "avg_kwh": float(energy_values.mean()) if not energy_values.empty else None,
+                },
+                "intelligence_source": "Rules Only",
+                "degraded": True,
+                "degradation_reason": "insufficient_energy_data",
+            }
 
         # Load into Pandas for efficient vector operations
         df = pd.DataFrame(records)
@@ -303,36 +345,32 @@ class EnergyAnalyzer:
             if not self.total_model:
                 raise RuntimeError("Total energy model not available")
 
-            # Build feature vector using most-recent record
             latest = df.iloc[-1]
-
-            # Find a temperature column if present, otherwise default to 22.5 to prevent crashes
-            temp_cols = [c for c in df.columns if 'temp' in c.lower() or 'temperature' in c.lower()]
-            temperature = float(latest[temp_cols[0]]) if temp_cols else 22.5
-
-            dt = pd.to_datetime(latest['timestamp'])
-
-            # Build exact 5-feature DataFrame expected by the model
-            features_df = pd.DataFrame([{
-                'hour': dt.hour,
-                'day_of_week': dt.dayofweek,
-                'month': dt.month,
-                'is_weekend': int(dt.dayofweek >= 5),
-                'air_temperature': temperature
-            }])
+            features_df = self._build_feature_frame(latest)
+            if self.feature_names is not None:
+                expected = list(self.feature_names)
+                missing = sorted(set(expected) - set(features_df.columns))
+                if missing:
+                    raise ValueError(f"missing_energy_model_features:{','.join(missing)}")
+                features_df = features_df[expected]
 
             # Run model inference (guarded)
             predicted_total = None
             predicted_hvac = None
+            model_started = time.perf_counter()
             try:
                 predicted_total = float(self.total_model.predict(features_df)[0])
             except Exception:
                 logger.exception("Total energy model inference failed")
                 raise
+            if not np.isfinite(predicted_total):
+                raise ValueError("non_finite_total_energy_prediction")
 
             if self.hvac_model is not None:
                 try:
                     predicted_hvac = float(self.hvac_model.predict(features_df)[0])
+                    if not np.isfinite(predicted_hvac):
+                        raise ValueError("non_finite_hvac_energy_prediction")
                 except Exception:
                     logger.exception("HVAC model inference failed; continuing without HVAC prediction")
 
@@ -340,7 +378,8 @@ class EnergyAnalyzer:
             metrics = {
                 "predicted_total_kwh": predicted_total,
                 "predicted_hvac_kwh": predicted_hvac if predicted_hvac is not None else None,
-                "avg_kwh": float(average_consumption)
+                "avg_kwh": float(average_consumption),
+                "model_latency_ms": round((time.perf_counter() - model_started) * 1000, 2),
             }
 
             # Optionally run lightweight anomaly heuristics on predicted_total

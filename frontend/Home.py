@@ -119,12 +119,6 @@ modules = [
         "page": "pages/Occupancy_and_Security.py",
         "summary": "Occupancy signals and security event review.",
     },
-    {
-        "name": "Settings",
-        "icon": "⚙️",
-        "page": "pages/Settings.py",
-        "summary": "Platform configuration and environment details.",
-    },
 ]
 
 for row_start in range(0, len(modules), 3):
@@ -138,7 +132,7 @@ for row_start in range(0, len(modules), 3):
                     module["page"],
                     label=f"Open {module['name']}",
                     icon=module["icon"],
-                    use_container_width=True,
+                    width="stretch",
                 )
 
 st.markdown("### Quick Actions")
@@ -148,28 +142,28 @@ with quick_cols[0]:
         "pages/Dashboard.py",
         label="Executive Report",
         icon="🌐",
-        use_container_width=True,
+        width="stretch",
     )
 with quick_cols[1]:
     st.page_link(
         "pages/Energy.py",
         label="Energy Review",
         icon="⚡",
-        use_container_width=True,
+        width="stretch",
     )
 with quick_cols[2]:
     st.page_link(
         "pages/Maintenance.py",
         label="Asset Review",
         icon="🔧",
-        use_container_width=True,
+        width="stretch",
     )
 with quick_cols[3]:
-    if st.button("Refresh Status", icon="🔄", use_container_width=True):
+    if st.button("Refresh Status", icon="🔄", width="stretch"):
         st.rerun()
 
 placeholder_cols = st.columns(2)
 with placeholder_cols[0]:
-    st.button("Global Diagnostics", disabled=True, use_container_width=True)
+    st.button("Global Diagnostics", disabled=True, width="stretch")
 with placeholder_cols[1]:
-    st.button("Alert Inbox", disabled=True, use_container_width=True)
+    st.button("Alert Inbox", disabled=True, width="stretch")

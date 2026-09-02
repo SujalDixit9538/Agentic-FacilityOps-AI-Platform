@@ -1,18 +1,40 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+*.pyd
 .venv/
-.vscode/
+venv/
 env/
+
+# Environment files
 .env
-.env.example
-logs/
-.ipynb_checkpoints/
-.pytest_cache/
+.env.*
+!.env.example
+
+# IDE and local tooling
+.vscode/
 .cache/
 .continue/
-.github/
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Logs and generated data
+logs/
+*.log
 data/*.db
+backend/database/*.db
+
+# Local helper scripts
 check_assets.py
 seed_db.py
-backend/database/*.db
-tests/*
+
+# Generated test artifacts only
+tests/.pytest_cache/
+tests/**/__pycache__/
+tests/**/*.pyc
+
+x.md

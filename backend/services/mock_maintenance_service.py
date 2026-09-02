@@ -5,6 +5,8 @@ import pandas as pd
 from sqlalchemy.orm import Session
 from backend.repositories.maintenance_repository import MaintenanceRepository
 from backend.schemas.maintenance import AssetBase, MaintenanceLogBase
+from backend.database.models.maintenance import Asset, MaintenanceLog
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +46,8 @@ def seed_mock_maintenance_data(db: Session, facility_id: str):
             installation_date=install_date,
             status="Operational"
         )
-        db_asset = repository.create_asset(asset_data)
+        db_asset = Asset(asset_id=f"AST-{uuid.uuid4().hex[:12].upper()}", **asset_data.model_dump())
+        db.add(db_asset)
         assets_created += 1
         
         # Identify if this asset should be "at-risk" (approx 20% chance)
@@ -105,8 +108,13 @@ def seed_mock_maintenance_data(db: Session, facility_id: str):
                 torque=round(max(20.0, min(75.0, torque)), 2),
                 wear=round(min(300.0, wear), 2)
             )
-            repository.create_maintenance_log(log_data)
+            db.add(MaintenanceLog(log_id=f"LOG-{uuid.uuid4().hex[:12].upper()}", **log_data.model_dump()))
             logs_created += 1
 
     logger.info(f"Seeded {assets_created} assets and {logs_created} maintenance logs for {facility_id}.")
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return assets_created, logs_created

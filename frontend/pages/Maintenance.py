@@ -7,6 +7,7 @@ if root_dir not in sys.path:
 import pandas as pd
 import streamlit as st
 from frontend.services.api_client import safe_get, safe_post
+from frontend.services.page_data import get_facilities
 from frontend.components.ui import (
     kpi_card,
     health_gauge,
@@ -38,12 +39,14 @@ with st.sidebar:
     st.markdown("### ⚙️ Module Controls")
     
     # Fetch facilities from backend
-    resp = safe_get("/maintenance/facilities", fallback_data={"facilities": ["F-0000", "F-0001"]})
-    facilities = resp.get("data", {}).get("facilities", ["F-0000", "F-0001"])
+    facilities, _ = get_facilities()
+    if not facilities:
+        st.warning("No facilities are available from the canonical catalog.")
+        st.stop()
     
     seed_facility = st.selectbox("Target Facility", facilities, key="maint_seed_target")
 
-    if st.button("🔄 Trigger Mock Data Ingestion", use_container_width=True):
+    if st.button("🔄 Trigger Mock Data Ingestion", width="stretch"):
         with st.spinner("Provisioning assets..."):
             res = safe_post("/maintenance/seed", params={"facility_id": seed_facility})
             if res.get("success"):

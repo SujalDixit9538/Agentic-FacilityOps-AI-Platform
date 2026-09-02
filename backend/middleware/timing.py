@@ -11,4 +11,5 @@ async def timing_middleware(request: Request, call_next):
     process_time = time.time() - start_time
     
     response.headers["X-Process-Time"] = f"{process_time:.4f} sec"
+    response.headers["X-Response-Budget"] = "analysis=10s;dashboard=2s"
     return response

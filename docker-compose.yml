@@ -1,0 +1,35 @@
+services:
+  api:
+    build: .
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000
+    env_file: .env
+    environment:
+      DATABASE_URL: sqlite:////app/data/facilityops.db
+      AUTO_SEED_DEMO_DATA: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - facilityops-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      start_period: 180s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build: .
+    command: sh -c "PYTHONPATH=/app streamlit run frontend/Home.py --server.address 0.0.0.0 --server.port 8501"
+    env_file: .env
+    environment:
+      API_BASE_URL: http://api:8000/api/v1
+    ports:
+      - "8501:8501"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  facilityops-data:

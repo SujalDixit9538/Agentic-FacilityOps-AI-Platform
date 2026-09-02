@@ -4,7 +4,7 @@ import os
 from datetime import date, timedelta
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv
-from backend.database.models.maintenance import Asset
+from backend.database.models.maintenance import Asset, MaintenanceLog
 from backend.repositories.maintenance_repository import MaintenanceRepository
 from backend.agents.maintenance.actions import MaintenanceActionEngine
 from backend.agents.maintenance.analyzer import MaintenanceAnalyzer
@@ -192,3 +192,28 @@ class MaintenanceAgent:
             "alerts": alerts_generated,
             "recommendations": recommendations
         }
+
+    def analyze_facility(self, facility_id: str, limit: int = 25):
+        """Analyze a bounded fleet using one asset query and one log query."""
+        assets = self.db.query(Asset).filter(Asset.facility_id == facility_id).limit(limit).all()
+        asset_ids = [asset.asset_id for asset in assets]
+        logs = self.db.query(MaintenanceLog).filter(MaintenanceLog.asset_id.in_(asset_ids)).order_by(MaintenanceLog.maintenance_date.desc()).all() if asset_ids else []
+        logs_by_asset = {}
+        for log in logs:
+            logs_by_asset.setdefault(log.asset_id, []).append({
+                "log_id": log.log_id,
+                "issue": log.issue,
+                "maintenance_date": log.maintenance_date.isoformat(),
+                "cost": log.cost,
+                "air_temp": log.air_temp,
+                "process_temp": log.process_temp,
+                "speed": log.speed,
+                "torque": log.torque,
+                "wear": log.wear,
+            })
+
+        reports = []
+        for asset in assets:
+            analysis = self.analyzer.analyze_asset_health({"asset_id": asset.asset_id}, list(reversed(logs_by_asset.get(asset.asset_id, []))))
+            reports.append({"asset_id": asset.asset_id, "analysis": analysis, "alerts": [], "recommendations": []})
+        return reports

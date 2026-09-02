@@ -4,6 +4,8 @@ import logging
 from sqlalchemy.orm import Session
 from backend.repositories.energy_repository import EnergyRepository
 from backend.schemas.energy import EnergyRecordBase
+from backend.database.models.energy import EnergyRecord
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +41,21 @@ def seed_mock_energy_data(db: Session, facility_id: str = "FAC-001", days: int =
         peak_demand_kw = energy_kwh * random.uniform(1.1, 1.3)
         cost = energy_kwh * 0.12  # Estimated utility rate per kWh
 
-        record_data = EnergyRecordBase(
+        records_created += 1
+        db.add(EnergyRecord(
+            record_id=f"ENG-{uuid.uuid4().hex[:12].upper()}",
             facility_id=facility_id,
             timestamp=current_time,
             energy_kwh=round(energy_kwh, 2),
             peak_demand_kw=round(peak_demand_kw, 2),
-            cost=round(cost, 2)
-        )
-        
-        repository.create_record(record_data)
-        records_created += 1
+            cost=round(cost, 2),
+        ))
+
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
 
     logger.info(f"Successfully seeded {records_created} energy records for {facility_id}.")
     return records_created

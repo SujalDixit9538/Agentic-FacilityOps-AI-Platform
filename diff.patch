@@ -1,0 +1,32 @@
+--- a/backend/agents/occupancy/analyzer.py
++++ b/backend/agents/occupancy/analyzer.py
+@@ -19,16 +19,17 @@
+         if not df_sec.empty:
+             df_sec = df_sec.copy()
+-            df_sec['severity_norm'] = df_sec['severity'].astype(str).str.strip().str.lower()
+-            df_sec['status_norm'] = df_sec['status'].astype(str).str.strip().str.lower()
++            df_sec['severity_norm'] = df_sec['severity'].apply(lambda x: str(x).strip().lower())
++            df_sec['status_norm'] = df_sec['status'].apply(lambda x: str(x).strip().lower())
+             sev_map = {'low': 1, 'medium': 2, 'high': 3}
+             df_sec['severity_num'] = df_sec['severity_norm'].map(sev_map).fillna(1)
+             state_summary['active_security_threats'] = int((df_sec['status_norm'] == 'open').sum())
+             det_indices = set()
+             for idx, row in df_sec.iterrows():
+                 if row['severity_norm'] == 'high' or (row['severity_norm'] in ['medium', 'high'] and row['status_norm'] == 'open'):
+-                    anomalies.append({'type': 'Security Breach', 'severity': row['severity'], 'message': 'Deterministic breach.'})
++                    if idx not in det_indices:
++                        anomalies.append({'type': 'Security Breach', 'severity': row['severity'], 'message': 'Deterministic breach.'})
++                        det_indices.add(idx)
+-                    det_indices.add(idx)
+             if len(df_sec) > 5:
+                 df_sec['hour'] = pd.to_datetime(df_sec['event_time']).dt.hour
+                 feat = df_sec[['hour', 'severity_num', 'zone_level', 'recent_failed_attempts']].fillna(0)
+                 preds = IsolationForest(contamination=0.1, random_state=42).fit_predict(feat)
+-                for i, idx in enumerate(df_sec.index):
+-                    if preds[i] == -1 and idx not in det_indices:
+-                        anomalies.append({'type': 'Active Security Breach', 'severity': row['severity'], 'message': 'Unusual pattern.'})
++                for i, idx in enumerate(df_sec.index):
++                    if preds[i] == -1 and idx not in det_indices:
++                        anomalies.append({'type': 'Active Security Breach', 'severity': df_sec.loc[idx, 'severity'], 'message': 'Unusual pattern.'})
++                        det_indices.add(idx)
+         return anomalies, state_summary

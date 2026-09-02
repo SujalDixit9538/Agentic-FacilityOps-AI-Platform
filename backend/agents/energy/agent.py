@@ -1,72 +1,44 @@
 import logging
-import json
-import os
+from backend.agents.energy.analyzer import EnergyAnalyzer
+from backend.database.models.energy import EnergyRecord
 from sqlalchemy.orm import Session
-from dotenv import load_dotenv
-
-load_dotenv()
-
-try:
-    from groq import Groq
-    HAS_GROQ = True
-except ImportError:
-    HAS_GROQ = False
 
 logger = logging.getLogger(__name__)
 
 class EnergyAgent:
     def __init__(self, db: Session):
         self.db = db
-        self.api_key = os.getenv("GROQ_API_KEY")
-        self.client = None
-        self.model_name = "llama-3.3-70b-versatile"
-        
-        if HAS_GROQ and self.api_key:
-            try:
-                self.client = Groq(api_key=self.api_key)
-            except Exception as e:
-                logger.error(f"Groq Init Failed: {e}")
+        self.analyzer = EnergyAnalyzer()
 
     def analyze_facility(self, facility_id: str, days: int = 7):
-        # 1. Fetch your rule-based data (keep your existing logic here that checks DB)
-        # For example, let's assume your existing rules generate this basic dictionary:
-        base_alerts = [{"type": "High HVAC Load", "severity": "High", "message": "Consumption spiked 15%"}]
-        base_metrics = {"total_kwh": 4500, "peak_kw": 210}
+        records = self.db.query(EnergyRecord).filter(
+            EnergyRecord.facility_id == facility_id
+        ).order_by(EnergyRecord.timestamp.desc()).limit(days * 24).all()
+        records_dict = [
+            {
+                "timestamp": record.timestamp.isoformat() if record.timestamp else None,
+                "energy_kwh": record.energy_kwh,
+                "peak_demand_kw": record.peak_demand_kw,
+            }
+            for record in records
+        ]
+        analysis = self.analyzer.analyze_consumption(records_dict)
+        metrics = analysis.setdefault("metrics", {})
+        metrics["records_evaluated"] = len(records)
+        metrics["intelligence_source"] = analysis.get("intelligence_source", "Rules Only")
+        if not records:
+            analysis["degraded"] = True
+            analysis["degradation_reason"] = "energy_telemetry_unavailable"
 
-        # 2. Dynamic LLM Recommendations (THE FIX)
-        dynamic_recommendations = []
-        
-        if self.client and base_alerts:
-            system_prompt = (
-                "You are an AI Energy Agent for a commercial facility. "
-                "Analyze the provided alerts and metrics. "
-                "Generate exactly TWO highly specific, actionable engineering recommendations to reduce energy consumption. "
-                "Output ONLY valid JSON in this format: {\"recommendations\": [{\"action\": \"...\", \"priority\": \"High\"}]}"
-            )
-            
-            try:
-                chat_completion = self.client.chat.completions.create(
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": json.dumps({"alerts": base_alerts, "metrics": base_metrics})}
-                    ],
-                    model=self.model_name,
-                    temperature=0.3,
-                    response_format={"type": "json_object"}
-                )
-                llm_data = json.loads(chat_completion.choices[0].message.content)
-                dynamic_recommendations = llm_data.get("recommendations", [])
-            except Exception as e:
-                logger.error(f"Energy LLM failed: {e}")
-                # Fallback to rules if API fails
-                dynamic_recommendations = [{"action": "Manually inspect HVAC schedule.", "priority": "Medium"}]
-
-        # 3. Return payload to the Streamlit UI
         return {
             "facility_id": facility_id,
-            "alerts": base_alerts,
-            "recommendations": dynamic_recommendations,
-            "analysis": {"metrics": base_metrics}
+            "alerts": analysis.get("anomalies", []),
+            "recommendations": [],
+            "analysis": analysis,
+            "provenance": {"source": "EnergyAnalyzer", "facility_id": facility_id},
+            "freshness": {"status": "available" if records else "unavailable"},
+            "degraded": bool(analysis.get("degraded", analysis.get("status") != "success")),
+            "quality_flags": ([analysis["degradation_reason"]] if analysis.get("degradation_reason") else []),
         }
 
 

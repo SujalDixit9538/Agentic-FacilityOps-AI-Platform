@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from backend.agents.occupancy.agent import OccupancyAgent
 from backend.repositories.occupancy_repository import OccupancyRepository
 from backend.schemas.occupancy import OccupancyRecordBase, SecurityEventBase, OccupancyImageBase
+from backend.agents.occupancy.config import OCCUPANCY_RULES
 import logging
 
 logger = logging.getLogger(__name__)
@@ -111,7 +112,7 @@ class OccupancyService:
             util = (occ / cap * 100) if cap > 0 else 0
 
             # Status
-            if occ >= cap:
+            if util >= OCCUPANCY_RULES["OVERCROWDING_THRESHOLD_PCT"] * 100:
                 status = "OVERCROWDED"
                 overcrowded += 1
                 alerts.append({
@@ -122,7 +123,7 @@ class OccupancyService:
                     "message": f"{zone.zone_name} is at capacity.",
                     "utilization_percent": round(util, 1)
                 })
-            elif util >= 80:
+            elif util >= OCCUPANCY_RULES["HIGH_UTILIZATION_THRESHOLD_PCT"] * 100:
                 status = "HIGHLY_UTILIZED"
                 highly += 1
             elif util >= 40:

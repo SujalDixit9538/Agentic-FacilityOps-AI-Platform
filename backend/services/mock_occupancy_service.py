@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 from backend.repositories.occupancy_repository import OccupancyRepository
 from backend.services.occupancy_zone_generator import generate_zones_for_facility
 from backend.schemas.occupancy import OccupancyRecordBase, SecurityEventBase
+from backend.database.models.occupancy import OccupancyRecord, SecurityEvent
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +64,9 @@ def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: in
             total_area_sqft=total_area_sqft,
             total_floors=total_floors,
         )
-        zones = repo.bulk_create_zones(zones_to_create)
+        db.add_all(zones_to_create)
+        db.flush()
+        zones = zones_to_create
         logger.info(f"Generated {len(zones)} zones for {facility_id}.")
 
     # 2. Idempotency check — don't re-seed if occupancy data already exists
@@ -111,7 +115,7 @@ def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: in
                 source="demo_sensor",
                 timestamp=current_time,
             )
-            repo.create_occupancy_record(record_data)
+            db.add(OccupancyRecord(occupancy_id=f"OCC-{uuid.uuid4().hex[:12].upper()}", **record_data.model_dump()))
             occ_created += 1
 
     # 4. Generate Correlated Security Events — scales with `days`, not a flat count
@@ -129,8 +133,13 @@ def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: in
             zone_level=zone_level,
             recent_failed_attempts=recent_failed_attempts,
         )
-        repo.create_security_event(sec_data)
+        db.add(SecurityEvent(event_id=f"SEC-{uuid.uuid4().hex[:12].upper()}", **sec_data.model_dump()))
         sec_created += 1
 
     logger.info(f"Seeded {occ_created} occupancy records and {sec_created} security events for {facility_id}.")
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return occ_created, sec_created

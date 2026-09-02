@@ -4,7 +4,10 @@ Configuration and Thresholds for the Security & Occupancy Agent.
 
 OCCUPANCY_RULES = {
     # Threshold at which a room is considered critically overcrowded
-    "OVERCROWDING_THRESHOLD_PCT": 0.90, 
+    "OVERCROWDING_THRESHOLD_PCT": 1.0,
+    "HIGH_UTILIZATION_THRESHOLD_PCT": 0.80,
+    "SECURITY_HIGH_SEVERITY": "high",
+    "SECURITY_ACTIVE_STATUSES": ("open", "investigating"),
     
     # Standard max capacities for facility zones
     # "ZONE_CAPACITIES": {

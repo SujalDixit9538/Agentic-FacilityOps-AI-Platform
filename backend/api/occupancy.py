@@ -11,6 +11,7 @@ from backend.schemas.occupancy import (
 )
 from backend.schemas.dashboard import OccupancyDashboardEnvelope
 from backend.utils.api_responses import success_response
+from backend.services.facility_catalog_service import FacilityCatalogService
 
 # NOTE: no prefix here — router.py's include_router(occupancy.router, prefix="/occupancy", ...)
 # is what adds the /occupancy prefix, matching the energy/maintenance/cost pattern.
@@ -23,6 +24,13 @@ async def occupancy_module_health(db: Session = Depends(get_db)):
     service = OccupancyService(db)
     status = service.get_module_status()
     return success_response(message="Occupancy module health check", data=status)
+
+
+@router.get("/facilities")
+async def get_facilities(db: Session = Depends(get_db)):
+    """Lists active facility IDs from the canonical catalog."""
+    facility_list = [f.facility_id for f in FacilityCatalogService(db).list_active()]
+    return success_response(message="Retrieved facilities", data={"facilities": facility_list})
 
 
 @router.post("/seed")

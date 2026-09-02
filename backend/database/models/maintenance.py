@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Index
 from sqlalchemy.orm import relationship
 from backend.database.base import Base
+from backend.database.models.facility import Facility
 import datetime
 
 class Asset(Base):
@@ -8,10 +9,14 @@ class Asset(Base):
     __tablename__ = "assets"
 
     asset_id = Column(String, primary_key=True, index=True)
-    facility_id = Column(String, index=True)
+    facility_id = Column(String, ForeignKey("facilities.facility_id"), index=True, nullable=False)
     asset_type = Column(String, nullable=False)
     installation_date = Column(DateTime, nullable=False)
     status = Column(String, default="Operational") # Operational, Under Maintenance, Decommissioned
+
+    __table_args__ = (
+        Index("ix_assets_facility_status", "facility_id", "status"),
+    )
     
     # Relationship to maintenance logs
     maintenance_logs = relationship("MaintenanceLog", back_populates="asset")

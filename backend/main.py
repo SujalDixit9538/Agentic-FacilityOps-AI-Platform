@@ -5,18 +5,12 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.api.router import api_router
 from backend.middleware.exceptions import global_exception_handler
-from backend.services.mock_cost_service import seed_mock_cost_data
-from backend.services.mock_maintenance_service import seed_mock_maintenance_data
-# from backend.services.mock_occupancy_service import seed_mock_occupancy_data
-from backend.services.mock_occupancy_service import seed_mock_occupancy_data
 from backend.services.logging_service import setup_logging
 from backend.middleware.timing import timing_middleware
 from backend.core.config import settings
 from backend.database.connection import engine
 from backend.database.base import Base
 from backend.database.connection import SessionLocal
-from backend.services.mock_iot_service import seed_mock_energy_data
-import pandas as pd
 
 setup_logging()
 
@@ -26,11 +20,7 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup logic
-    await initialize_default_data()
     yield
-    # Shutdown logic
-    pass
 
 # Initialize FastAPI Application
 app = FastAPI(
@@ -65,37 +55,3 @@ app.include_router(api_router)
 async def root_redirect():
     """Redirects the root URL to the interactive Swagger UI."""
     return RedirectResponse(url="/api/docs")
-
-async def initialize_default_data():
-    """
-    Automatically seeds the database with initial mock data on startup 
-    if the database is empty. Prevents the "empty state" on first boot.
-    """
-    from backend.database.connection import SessionLocal
-    db = SessionLocal()
-    try:
-        # Seed Energy Data
-        from backend.services.mock_iot_service import seed_mock_energy_data
-        seed_mock_energy_data(db, facility_id="FAC-001", days=7)
-        seed_mock_energy_data(db, facility_id="FAC-002", days=7)
-        
-        # Seed Maintenance Data
-        from backend.services.mock_maintenance_service import seed_mock_maintenance_data
-        facilities_df = pd.read_csv("data/processed_facilities.csv")
-        real_facility_ids = facilities_df["facility_id"].head(15).tolist()
-        for f_id in real_facility_ids:
-            seed_mock_maintenance_data(db, facility_id=f_id)
-        
-        # Seed Occupancy & Security Data
-        from backend.services.mock_occupancy_service import seed_mock_occupancy_data
-        for f_id in real_facility_ids:
-            seed_mock_occupancy_data(db, facility_id=f_id, days=7)
-        
-        # Seed Cost Optimization Data (ETP-019)
-        seed_mock_cost_data(db, facility_id="FAC-001", months_back=6)
-        seed_mock_cost_data(db, facility_id="FAC-002", months_back=6)
-        
-    except Exception as e:
-        print(f"Startup data seeding skipped: {e}")
-    finally:
-        db.close()

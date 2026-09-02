@@ -23,6 +23,36 @@ class CostActionEngine:
         ]
     }
 
+    ML_ACTIONS = {
+        "Consolidate Floors & Shed Load": {
+            "action": "Consolidate underutilized floors and shed nonessential HVAC and lighting load.",
+            "priority": "Medium",
+            "trigger": "Prescriptive ML",
+        },
+        "Dispatch Preemptive Maintenance": {
+            "action": "Dispatch a preemptive maintenance inspection for assets contributing to elevated demand.",
+            "priority": "High",
+            "trigger": "Prescriptive ML",
+        },
+        "Initiate Night-Mode Setbacks": {
+            "action": "Apply scheduled night-mode HVAC and lighting setbacks during low-occupancy periods.",
+            "priority": "Medium",
+            "trigger": "Prescriptive ML",
+        },
+    }
+
+    def generate_ml_recommendations(self, action: str, predicted_savings: float) -> List[Dict[str, Any]]:
+        """Converts a validated model action into an auditable recommendation."""
+        recommendation = self.ML_ACTIONS.get(action)
+        if not recommendation or predicted_savings <= 0:
+            return []
+        return [{
+            **recommendation,
+            "estimated_savings_usd": round(float(predicted_savings), 2),
+            "success_metric": "Compare next billing cycle cost against the facility baseline.",
+            "status": "Proposed",
+        }]
+
     def generate_recommendations(self, anomalies: List[Dict[str, Any]]) -> List[Dict[str, str]]:
         """Generates a list of unique recommendations based on detected financial anomalies."""
         if not anomalies:

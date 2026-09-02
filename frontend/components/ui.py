@@ -1,3 +1,5 @@
+import html as html_lib
+
 import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
@@ -25,11 +27,14 @@ def kpi_card(label: str, value: str, delta: Optional[str] = None, icon: Optional
     }
     accent_color = status_colors.get(status.lower(), COLORS["accent"])
     
+    safe_label = html_lib.escape(str(label))
+    safe_value = html_lib.escape(str(value))
+    safe_icon = html_lib.escape(str(icon)) if icon else ""
     delta_html = ""
     if delta:
-        delta_html = f'<div style="color: {accent_color}; margin-top: 8px; font-size: 14px; font-weight: 500;">{delta}</div>'
+        delta_html = f'<div style="color: {accent_color}; margin-top: 8px; font-size: 14px; font-weight: 500;">{html_lib.escape(str(delta))}</div>'
     
-    icon_str = f'<span style="margin-right: 8px;">{icon}</span>' if icon else ""
+    icon_str = f'<span style="margin-right: 8px;">{safe_icon}</span>' if icon else ""
 
     card_html = f"""
     <div style="
@@ -43,10 +48,10 @@ def kpi_card(label: str, value: str, delta: Optional[str] = None, icon: Optional
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
         margin-bottom: 16px;">
         <div style="color: {COLORS['text_sec']}; margin: 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
-            {icon_str}{label}
+            {icon_str}{safe_label}
         </div>
         <div style="color: {COLORS['text_pri']}; margin: 12px 0 0 0; font-size: 32px; font-weight: 700; line-height: 1;">
-            {value}
+            {safe_value}
         </div>
         {delta_html}
     </div>
@@ -166,7 +171,7 @@ def risk_table(df: pd.DataFrame) -> None:
         'padding': '10px'
     })
     
-    st.dataframe(styled_df, use_container_width=True, hide_index=True)
+    st.dataframe(styled_df, width="stretch", hide_index=True)
 
 def sensor_simulator_panel(on_predict: Callable[[Dict[str, Any]], Dict[str, Any]]) -> Optional[Dict[str, Any]]:
     """
@@ -224,6 +229,9 @@ def alert_feed(alerts: List[Dict[str, str]]) -> None:
     """
     for alert in alerts:
         severity = alert.get("severity", "low").lower()
+        safe_title = html_lib.escape(str(alert.get("title", "Alert")))
+        safe_description = html_lib.escape(str(alert.get("description", "Details unavailable.")))
+        safe_severity = html_lib.escape(str(severity))
         
         if severity == "high" or severity == "critical":
             color = COLORS["critical"]
@@ -232,7 +240,7 @@ def alert_feed(alerts: List[Dict[str, str]]) -> None:
         else:
             color = COLORS["accent"]
             
-        facility_html = f"<div style='margin-top: 8px; font-size: 12px; color: {COLORS['accent']}'>📍 {alert['facility']}</div>" if "facility" in alert else ""
+        facility_html = f"<div style='margin-top: 8px; font-size: 12px; color: {COLORS['accent']}'>📍 {html_lib.escape(str(alert['facility']))}</div>" if "facility" in alert else ""
         
         # Using native HTML details/summary provides the perfect "collapsible card" 
         # interface while maintaining the strict design system requirements
@@ -254,7 +262,7 @@ def alert_feed(alerts: List[Dict[str, str]]) -> None:
                 display: flex;
                 align-items: center;
                 justify-content: space-between;">
-                <span style="font-size: 16px; font-weight: 700; color: #FFFFFF;">{alert['title']}</span>
+                <span style="font-size: 16px; font-weight: 700; color: #FFFFFF;">{safe_title}</span>
                 <span style="
                     font-size: 12px; 
                     font-weight: 700;
@@ -263,11 +271,11 @@ def alert_feed(alerts: List[Dict[str, str]]) -> None:
                     border: 1px solid {color}; 
                     padding: 2px 8px; 
                     border-radius: 12px;">
-                    {severity}
+                    {safe_severity}
                 </span>
             </summary>
             <div style="padding: 0 16px 16px 16px; color: #E5E7EB; font-size: 15px; font-weight: 500; line-height: 1.5;">
-                {alert['description']}
+                {safe_description}
                 {facility_html}
             </div>
         </details>

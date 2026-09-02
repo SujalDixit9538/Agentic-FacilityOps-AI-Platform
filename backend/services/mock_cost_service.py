@@ -4,6 +4,8 @@ import logging
 from sqlalchemy.orm import Session
 from backend.repositories.cost_repository import CostRepository
 from backend.schemas.cost import CostRecordBase
+from backend.database.models.cost import CostRecord
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ def seed_mock_cost_data(db: Session, facility_id: str = "FAC-001", months_back: 
             amount=round(random.uniform(12000.0, 18000.0), 2),
             incurred_date=billing_date
         )
-        repository.create_cost_record(energy_cost)
+        db.add(CostRecord(record_id=f"CST-{uuid.uuid4().hex[:12].upper()}", **energy_cost.model_dump()))
         records_created += 1
         
         # Operational Fixed Costs (Low variance)
@@ -47,7 +49,7 @@ def seed_mock_cost_data(db: Session, facility_id: str = "FAC-001", months_back: 
             amount=round(random.uniform(4000.0, 4500.0), 2),
             incurred_date=billing_date
         )
-        repository.create_cost_record(ops_cost)
+        db.add(CostRecord(record_id=f"CST-{uuid.uuid4().hex[:12].upper()}", **ops_cost.model_dump()))
         records_created += 1
 
     # 2. Generate Random Maintenance Events (Spiky costs)
@@ -71,8 +73,13 @@ def seed_mock_cost_data(db: Session, facility_id: str = "FAC-001", months_back: 
             amount=round(random.uniform(min_cost, max_cost), 2),
             incurred_date=event_date
         )
-        repository.create_cost_record(maint_cost)
+        db.add(CostRecord(record_id=f"CST-{uuid.uuid4().hex[:12].upper()}", **maint_cost.model_dump()))
         records_created += 1
 
     logger.info(f"Seeded {records_created} financial records for {facility_id}.")
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     return records_created

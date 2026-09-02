@@ -7,6 +7,7 @@ from typing import List, Dict, Any
 
 import joblib
 import numpy as np
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,8 @@ class MaintenanceAnalyzer:
     Deterministic rules-engine for Maintenance Intelligence.
     Hybrid pattern: try Two-Stage ML prediction first, fall back to deterministic rules.
     """
+    _process_models = None
+
     def __init__(self):
         # Model placeholders
         self._models_loaded = False
@@ -29,6 +32,11 @@ class MaintenanceAnalyzer:
         if self._models_loaded:
             return
 
+        if MaintenanceAnalyzer._process_models is not None:
+            self.failure_model, self.fault_model = MaintenanceAnalyzer._process_models
+            self._models_loaded = True
+            return
+
         base = self._models_dir()
         try:
             failure_path = base / "maintenance_failure_model_v1.joblib"
@@ -40,6 +48,7 @@ class MaintenanceAnalyzer:
                 self.fault_model = joblib.load(fault_path)
 
             self._models_loaded = True
+            MaintenanceAnalyzer._process_models = (self.failure_model, self.fault_model)
             logger.info("Maintenance ML models loaded successfully.")
         except Exception as e:
             logger.exception("Failed to load Maintenance ML models: %s", e)
@@ -47,28 +56,48 @@ class MaintenanceAnalyzer:
 
     def predict_features(self, features_dict: Dict[str, Any]) -> Dict[str, Any]:
         """Shared logic to predict from a features dictionary."""
+        required_features = {"air_temp", "process_temp", "speed", "torque", "wear"}
+        missing_features = sorted(required_features - features_dict.keys())
+        if missing_features:
+            return {
+                "status": "degraded",
+                "metrics": {},
+                "anomalies": [],
+                "intelligence_source": "Degraded Fallback",
+                "degradation_reason": f"missing_maintenance_features:{','.join(missing_features)}",
+            }
+
         self._load_models()
         if not self.failure_model or not self.fault_model:
             raise RuntimeError("Maintenance ML models not available in models/ directory")
 
         # Map input JSON data to the AI4I 6-feature format.
-        safe_get = lambda key, default: float(features_dict.get(key, default))
+        safe_get = lambda key: float(features_dict[key])
         
         type_mapping = {'L': 0, 'M': 1, 'H': 2}
         type_val = type_mapping.get(features_dict.get('type', 'M'), 1)
 
         features_df = pd.DataFrame([{
             'Type': type_val,
-            'Air temperature [K]': safe_get('air_temp', 300.0),
-            'Process temperature [K]': safe_get('process_temp', 310.0),
-            'Rotational speed [rpm]': safe_get('speed', 1500.0),
-            'Torque [Nm]': safe_get('torque', 40.0),
-            'Tool wear [min]': safe_get('wear', 15.0)
+            'Air temperature [K]': safe_get('air_temp'),
+            'Process temperature [K]': safe_get('process_temp'),
+            'Rotational speed [rpm]': safe_get('speed'),
+            'Torque [Nm]': safe_get('torque'),
+            'Tool wear [min]': safe_get('wear')
         }])
 
         # 1. Predict Failure Probability (Health Score)
+        model_started = time.perf_counter()
         failure_probs = self.failure_model.predict_proba(features_df)[0]
         prob_failure = float(failure_probs[1])
+        if not np.isfinite(prob_failure) or not 0.0 <= prob_failure <= 1.0:
+            return {
+                "status": "degraded",
+                "metrics": {},
+                "anomalies": [],
+                "intelligence_source": "Degraded Fallback",
+                "degradation_reason": "non_finite_or_invalid_failure_probability",
+            }
         health_score = max(0.0, min(100.0, (1.0 - prob_failure) * 100))
 
         # 2. Predict Specific Issue (if probability of failure > 50%)
@@ -91,6 +120,7 @@ class MaintenanceAnalyzer:
                 "asset_health_score": round(health_score, 2),
                 "failure_probability": round(prob_failure, 4),
                 "predicted_issue": predicted_issue,
+                "model_latency_ms": round((time.perf_counter() - model_started) * 1000, 2),
             },
             "anomalies": anomalies,
             "intelligence_source": "ML"
@@ -136,8 +166,18 @@ class MaintenanceAnalyzer:
             if not self.failure_model or not self.fault_model:
                 raise RuntimeError("Maintenance ML models not available in models/ directory")
 
-            return self.predict_features(df.iloc[-1])
+            latest_features = df.iloc[-1].to_dict()
+            required_features = {"air_temp", "process_temp", "speed", "torque", "wear"}
+            if not required_features.issubset(latest_features):
+                raise ValueError("missing_maintenance_telemetry")
+            result = self.predict_features(latest_features)
+            if result.get("status") == "degraded":
+                return result
+            return result
 
         except Exception as e:
             logger.warning("Maintenance ML analysis failed: %s. Falling back to rules.", e)
-            return self._rule_based_analysis(df)
+            fallback = self._rule_based_analysis(df)
+            fallback["degraded"] = True
+            fallback["degradation_reason"] = str(e)
+            return fallback

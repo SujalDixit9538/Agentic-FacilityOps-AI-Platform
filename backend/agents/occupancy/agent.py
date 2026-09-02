@@ -93,4 +93,8 @@ class OccupancyAgent:
             "summary": state_summary,
             "alerts": alerts_generated,
             "recommendations": recommendations,
+            "provenance": {"source": "OccupancyAnalyzer", "security_reasoning": "rules_based", "facility_id": facility_id},
+            "freshness": {"status": "available" if joined_data or sec_dicts else "unavailable"},
+            "degraded": not bool(joined_data or sec_dicts),
+            "quality_flags": ([] if joined_data or sec_dicts else ["occupancy_and_security_data_unavailable"]),
         }
