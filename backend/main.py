@@ -1,57 +1,52 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from fastapi.responses import RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from backend.api.router import api_router
-from backend.middleware.exceptions import global_exception_handler
-from backend.services.logging_service import setup_logging
-from backend.middleware.timing import timing_middleware
 from backend.core.config import settings
-from backend.database.connection import engine
-from backend.database.base import Base
-from backend.database.connection import SessionLocal
+from backend.middleware.exceptions import global_exception_handler
+from backend.middleware.timing import timing_middleware
+from backend.services.logging_service import setup_logging
 
 setup_logging()
 
-Base.metadata.create_all(bind=engine)
-
-from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Application lifecycle hook.
+
+    Database schema management is intentionally handled by Alembic rather than
+    mutating the schema during application import/startup.
+    """
     yield
 
-# Initialize FastAPI Application
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Lightweight backend for Facility Intelligence",
     version="1.0.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
-# 1. Register Global Exception Handler
 app.add_exception_handler(Exception, global_exception_handler)
-
-# 2. Register Custom Middleware
 app.add_middleware(BaseHTTPMiddleware, dispatch=timing_middleware)
-
-# 3. Foundational Middleware (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
 
-# 4. Register API Router
 app.include_router(api_router)
 
-# 5. Root Redirect (Fixes the "Not Found" UI issue)
+
 @app.get("/", include_in_schema=False)
 async def root_redirect():
-    """Redirects the root URL to the interactive Swagger UI."""
+    """Redirect the root URL to the interactive API documentation."""
     return RedirectResponse(url="/api/docs")
