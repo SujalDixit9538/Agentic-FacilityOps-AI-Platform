@@ -22,10 +22,7 @@ class EnergyAgent:
         if days < 1:
             raise ValueError("days must be greater than zero")
 
-        records = self.repository.get_records_by_facility(
-            facility_id,
-            limit=days * 24,
-        )
+        records = self.repository.get_records_by_facility(facility_id, limit=days * 24)
         records_dict = [
             {
                 "timestamp": record.timestamp.isoformat() if record.timestamp else None,
@@ -37,7 +34,17 @@ class EnergyAgent:
 
         analysis = self.analyzer.analyze_consumption(records_dict)
         anomalies = analysis.get("anomalies", [])
-        recommendations = self.action_engine.generate_recommendations(anomalies)
+        deterministic_recommendations = self.action_engine.generate_recommendations(anomalies)
+        analysis_recommendations = analysis.get("recommendations", [])
+
+        # Keep actionable anomaly mitigations, then add forecast/baseline guidance when available.
+        recommendations = []
+        seen_actions = set()
+        for recommendation in deterministic_recommendations + analysis_recommendations:
+            action = recommendation.get("action")
+            if action and action not in seen_actions:
+                recommendations.append(recommendation)
+                seen_actions.add(action)
 
         metrics = analysis.setdefault("metrics", {})
         metrics["records_evaluated"] = len(records)
@@ -46,7 +53,6 @@ class EnergyAgent:
         if not records:
             analysis["degraded"] = True
             analysis["degradation_reason"] = "energy_telemetry_unavailable"
-            # Avoid presenting a generic recommendation as if it were evidence-based.
             recommendations = []
 
         return {
@@ -54,6 +60,7 @@ class EnergyAgent:
             "alerts": anomalies,
             "recommendations": recommendations,
             "analysis": analysis,
+            "forecast": analysis.get("forecast", {}),
             "provenance": {
                 "source": "EnergyAgent",
                 "facility_id": facility_id,
