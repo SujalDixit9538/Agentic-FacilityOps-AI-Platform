@@ -24,17 +24,22 @@ def render_kpi_row(
                 value = kpi.get("value", "")
                 delta = kpi.get("delta")
                 help_text = kpi.get("help") or kpi.get("help_text")
+                caption = kpi.get("caption")
             else:
                 title = getattr(kpi, "title", getattr(kpi, "label", "KPI"))
                 value = getattr(kpi, "value", "")
                 delta = getattr(kpi, "delta", None)
                 help_text = getattr(kpi, "help", getattr(kpi, "help_text", None))
+                caption = getattr(kpi, "caption", None)
 
             with column:
                 with st.container(border=True):
-                    st.metric(
-                        label=str(title),
-                        value=value,
-                        delta=delta,
-                        help=help_text,
-                    )
+                    st.caption(str(title).upper())
+                    st.markdown(f"### {value}")
+                    if delta:
+                        st.caption(str(delta))
+                    if caption:
+                        st.caption(str(caption))
+                    if help_text:
+                        with st.expander("Details", expanded=False):
+                            st.caption(str(help_text))
