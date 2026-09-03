@@ -12,7 +12,7 @@ services:
       - facilityops-data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/readiness')"]
       start_period: 180s
       interval: 30s
       timeout: 5s
