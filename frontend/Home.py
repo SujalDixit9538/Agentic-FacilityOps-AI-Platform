@@ -31,16 +31,22 @@ with st.spinner("Connecting to platform services..."):
         "/health",
         fallback_data={"status": "unreachable", "database": "unreachable"},
     ) or {}
-    facilities_data = safe_get("/maintenance/facilities", fallback_data={"facilities": []}) or {}
+    facilities_data = safe_get("/maintenance/facilities", fallback_data={"facilities": [], "facility_options": []}) or {}
     health_checked_at = datetime.now(timezone.utc)
 
 backend_online = health_data.get("success", False)
 health_payload = health_data.get("data", {}) or {}
-db_operational = health_payload.get("database") == "operational"
+
 facilities_payload = facilities_data.get("data", {}) or {}
 facility_ids = facilities_payload.get("facilities", []) or []
+facility_options = facilities_payload.get("facility_options", []) or []
+option_by_id = {item.get("facility_id"): item for item in facility_options if item.get("facility_id")}
 
-if backend_online and db_operational:
+# Backward-compatible fallback for older API responses that only return IDs.
+if not facility_options:
+    facility_options = [{"facility_id": facility_id, "name": facility_id} for facility_id in facility_ids]
+
+if backend_online and health_payload.get("database") == "operational":
     st.success("Platform online · Data services connected")
 else:
     render_status_banner(
@@ -48,21 +54,33 @@ else:
         custom_message="Platform is running in degraded mode. Some services may be unavailable.",
     )
 
-# Facility context is deliberately global so every agent page can operate on the
-# same facility instead of maintaining independent hardcoded selectors.
-if facility_ids:
+if facility_options:
     current = st.session_state.get("selected_facility_id")
-    if current not in facility_ids:
-        current = facility_ids[0]
+    option_ids = [item["facility_id"] for item in facility_options]
+    if current not in option_ids:
+        current = option_ids[0]
+
+    def format_facility(facility_id: str) -> str:
+        item = option_by_id.get(facility_id, {})
+        name = item.get("name") or facility_id
+        facility_type = item.get("facility_type")
+        return f"{name} · {facility_id}" if not facility_type else f"{name} · {facility_type} · {facility_id}"
 
     selected = st.selectbox(
         "Facility under analysis",
-        facility_ids,
-        index=facility_ids.index(current),
+        option_ids,
+        index=option_ids.index(current),
+        format_func=format_facility,
         help="Choose the facility for the next intelligence workflow.",
     )
     set_selected_facility(selected)
-    st.caption(f"Active facility: **{selected}** · {len(facility_ids):,} facilities available")
+    selected_meta = option_by_id.get(selected, {})
+    meta = [selected]
+    if selected_meta.get("total_area_sqft"):
+        meta.append(f"{selected_meta['total_area_sqft']:,.0f} sqft")
+    if selected_meta.get("total_floors"):
+        meta.append(f"{selected_meta['total_floors']} floors")
+    st.caption(" · ".join(meta) + f" · {len(option_ids):,} facilities in catalog")
 else:
     selected = None
     st.warning("No facilities are available in the catalog yet. Load the canonical facility dataset before running analysis.")
@@ -79,14 +97,14 @@ status_cards = [
     },
     {
         "title": "Database",
-        "value": "Operational" if db_operational else "Offline",
-        "delta": "Connected" if db_operational else "Check required",
+        "value": "Operational" if health_payload.get("database") == "operational" else "Offline",
+        "delta": "Connected" if health_payload.get("database") == "operational" else "Check required",
         "help": f"Database status: {health_payload.get('database', 'unreachable')}",
     },
     {
         "title": "Facilities",
-        "value": f"{len(facility_ids):,}",
-        "delta": "Catalog loaded" if facility_ids else "No catalog",
+        "value": f"{len(facility_options):,}",
+        "delta": "Catalog loaded" if facility_options else "No catalog",
         "help": "Active facilities exposed by the canonical facility catalog.",
     },
     {
