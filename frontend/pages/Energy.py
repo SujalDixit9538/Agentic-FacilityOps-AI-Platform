@@ -10,17 +10,26 @@ if root_dir not in sys.path:
 
 from frontend.components.status import render_empty_state, render_status_banner
 from frontend.services.api_client import safe_get, safe_post
-from frontend.services.page_data import get_facilities, metadata, state_message
+from frontend.services.page_data import get_facility_options, metadata, state_message
 
 st.set_page_config(page_title="Energy | FacilityOPS", layout="wide")
 st.title("Energy Operations")
 st.caption("Review verified consumption, demand, and energy intelligence for the selected facility.")
 
-facilities, _ = get_facilities()
-if not facilities:
+facility_options, _ = get_facility_options()
+if not facility_options:
     render_status_banner(False, "No facilities are available from the canonical catalog.")
     st.stop()
-selected_facility = st.selectbox("Facility", facilities, key="energy_facility")
+
+facility_ids = [item["facility_id"] for item in facility_options]
+selected_facility = st.selectbox("Facility", facility_ids, key="energy_facility")
+selected = next(item for item in facility_options if item["facility_id"] == selected_facility)
+
+context = st.columns(4)
+context[0].metric("Facility", selected_facility)
+context[1].metric("Type", selected.get("facility_type") or "Not reported")
+context[2].metric("Area", f"{float(selected['total_area_sqft']):,.0f} ft²" if selected.get("total_area_sqft") else "Not reported")
+context[3].metric("Floors", str(selected.get("total_floors") or "Not reported"))
 
 with st.sidebar:
     st.subheader("Data operations")
@@ -40,7 +49,6 @@ if not dashboard.get("success"):
 
 data = dashboard.get("data") or {}
 dashboard_meta = metadata(dashboard)
-st.markdown(f"### {selected_facility}")
 st.caption(
     f"Data as of: {dashboard_meta['freshness'].get('as_of', 'not reported')} | "
     f"Source: {dashboard_meta['provenance'].get('source', 'not reported')}"
