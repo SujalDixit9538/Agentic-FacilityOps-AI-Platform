@@ -1,34 +1,62 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, Response, status
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 
+from backend.api.dependencies import get_db
 from backend.services.logging_service import get_logger
 from backend.utils.api_responses import success_response
-from backend.api.dependencies import get_db
 
 logger = get_logger(__name__)
 router = APIRouter()
 
+
 @router.get("/health")
 async def health_check(db: Session = Depends(get_db)):
-    """
-    Health endpoint that also verifies database connectivity (ETP-005 Integration).
-    """
-    logger.info("Health check endpoint accessed.")
-    
+    """Backward-compatible health endpoint with dependency status."""
     try:
-        # Lightweight query to confirm database initialization succeeds
         db.execute(text("SELECT 1"))
         db_status = "operational"
-    except Exception as e:
-        logger.error(f"Database connection failed: {e}")
+        overall_status = "healthy"
+    except Exception:
+        logger.exception("Database connection failed during health check")
         db_status = "degraded"
-    
-    # Utilize our shared utility
+        overall_status = "degraded"
+
     return success_response(
-        message="FacilityOPS Backend is operational.",
+        message="FacilityOPS Backend health status.",
         data={
-            "status": "healthy",
-            "database": db_status
-        }
+            "status": overall_status,
+            "database": db_status,
+        },
+    )
+
+
+@router.get("/liveness")
+async def liveness_check():
+    """Confirm that the API process is alive without checking dependencies."""
+    return success_response(
+        message="FacilityOPS Backend is alive.",
+        data={"status": "alive"},
+    )
+
+
+@router.get("/readiness")
+async def readiness_check(
+    response: Response,
+    db: Session = Depends(get_db),
+):
+    """Confirm that the API can serve requests requiring its database."""
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("Database readiness check failed")
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return success_response(
+            message="FacilityOPS Backend is not ready.",
+            data={"status": "not_ready", "database": "unavailable"},
+        )
+
+    return success_response(
+        message="FacilityOPS Backend is ready.",
+        data={"status": "ready", "database": "operational"},
     )
