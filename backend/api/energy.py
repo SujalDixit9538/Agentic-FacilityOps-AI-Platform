@@ -20,7 +20,19 @@ async def get_energy_facilities(db: Session = Depends(get_db)):
     facilities = FacilityCatalogService(db).list_active()
     return success_response(
         message="Retrieved canonical facilities",
-        data={"facilities": [f.facility_id for f in facilities]},
+        data={
+            "facilities": [facility.facility_id for facility in facilities],
+            "facility_options": [
+                {
+                    "facility_id": facility.facility_id,
+                    "name": facility.name,
+                    "facility_type": facility.facility_type,
+                    "total_area_sqft": facility.total_area_sqft,
+                    "total_floors": facility.total_floors,
+                }
+                for facility in facilities
+            ],
+        },
     )
 
 
