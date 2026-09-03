@@ -14,7 +14,7 @@ from frontend.services.page_data import get_facility_options, metadata, state_me
 
 st.set_page_config(page_title="Energy | FacilityOPS", layout="wide")
 st.title("Energy Operations")
-st.caption("Review verified consumption, demand, and energy intelligence for the selected facility.")
+st.caption("Review verified consumption, demand, forecasting, and operational recommendations.")
 
 facility_options, _ = get_facility_options()
 if not facility_options:
@@ -86,7 +86,7 @@ if st.button("Run energy analysis", type="primary", width="content"):
 
 analysis_response = st.session_state.get(f"energy_analysis_{selected_facility}")
 if not analysis_response:
-    st.info("Run an analysis to review current alerts and recommendations.")
+    st.info("Run an analysis to review current alerts, forecast, and recommendations.")
 elif not analysis_response.get("success"):
     st.error(analysis_response.get("message", "Energy analysis is unavailable."))
 else:
@@ -95,26 +95,58 @@ else:
     if analysis_response.get("degraded") or analysis_data.get("degraded"):
         st.warning("Energy analysis is degraded. Review its quality flags before acting.")
 
+    metrics = analysis_data.get("analysis", {}).get("metrics", {})
     summary_cols = st.columns(3)
     summary_cols[0].metric("Records evaluated", f"{int(analysis_meta['provenance'].get('records_evaluated', 0)):,}")
-    summary_cols[1].metric("Intelligence source", analysis_data.get("intelligence_source", "Not reported"))
-    summary_cols[2].metric("Data quality", "Degraded" if analysis_meta["degraded"] else "Good")
+    summary_cols[1].metric("Intelligence source", analysis_data.get("analysis", {}).get("intelligence_source", "Not reported"))
+    summary_cols[2].metric("Average usage", f"{float(metrics['avg_kwh']):,.1f} kWh" if metrics.get("avg_kwh") is not None else "Not reported")
 
     if analysis_meta["quality_flags"]:
         st.caption("Quality flags: " + ", ".join(analysis_meta["quality_flags"]).replace("_", " "))
 
     alerts = analysis_data.get("alerts") or []
     recommendations = analysis_data.get("recommendations") or []
-    if alerts:
-        st.markdown("**Detected issues**")
-        for alert in alerts:
-            st.warning(f"{alert.get('severity', 'Not reported')}: {alert.get('message', 'Alert details unavailable.')}")
-    else:
-        st.success("No energy alerts were returned.")
+    forecast = analysis_data.get("forecast") or analysis_data.get("analysis", {}).get("forecast") or {}
 
-    if recommendations:
+    left, right = st.columns(2)
+    with left:
+        st.markdown("**Detected issues**")
+        if alerts:
+            for alert in alerts:
+                st.warning(f"{alert.get('severity', 'Not reported')}: {alert.get('message', 'Alert details unavailable.')}")
+        else:
+            st.success("No energy alerts were returned.")
+    with right:
         st.markdown("**Recommended actions**")
-        for recommendation in recommendations:
-            st.info(f"{recommendation.get('priority', 'Not reported')}: {recommendation.get('action', 'Action details unavailable.')}")
+        if recommendations:
+            for recommendation in recommendations:
+                st.info(
+                    f"{recommendation.get('priority', 'Not reported')}: "
+                    f"{recommendation.get('action', 'Action details unavailable.') }"
+                )
+                if recommendation.get("reason"):
+                    st.caption(recommendation["reason"])
+        else:
+            st.info("No verified energy recommendations were returned.")
+
+    st.markdown("**24-hour baseline forecast**")
+    points = forecast.get("points") or []
+    if forecast.get("status") == "success" and points:
+        forecast_fig = go.Figure(
+            go.Scatter(
+                x=[point["timestamp"] for point in points],
+                y=[point["predicted_kwh"] for point in points],
+                mode="lines+markers",
+                name="Baseline forecast",
+            )
+        )
+        forecast_fig.update_layout(
+            height=320,
+            margin=dict(l=20, r=20, t=20, b=20),
+            xaxis_title="Time",
+            yaxis_title="Predicted kWh",
+        )
+        st.plotly_chart(forecast_fig, width="stretch", config={"displayModeBar": False})
+        st.caption("Forecast method: historical hourly baseline. This is a statistical baseline, not a trained ML forecast.")
     else:
-        st.info("No verified energy recommendations were returned.")
+        st.info("Not enough verified hourly history to produce a 24-hour baseline forecast.")
