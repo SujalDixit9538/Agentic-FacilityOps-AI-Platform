@@ -1,12 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, List
+from typing import Literal, Optional
 
 class CostRecordBase(BaseModel):
-    facility_id: str
-    category: str
-    description: Optional[str] = None
-    amount: float
+    facility_id: str = Field(min_length=1, max_length=64)
+    category: str = Field(min_length=1, max_length=64)
+    description: Optional[str] = Field(default=None, max_length=500)
+    amount: float = Field(ge=0, le=100_000_000)
     incurred_date: datetime
 
 class CostRecordResponse(CostRecordBase):
@@ -16,9 +16,9 @@ class CostRecordResponse(CostRecordBase):
 
 
 class CostRecommendationUpdate(BaseModel):
-    status: str
-    realized_savings_usd: Optional[float] = None
-    outcome_notes: Optional[str] = None
+    status: Literal["proposed", "accepted", "completed", "dismissed"]
+    realized_savings_usd: Optional[float] = Field(default=None, ge=0, le=100_000_000)
+    outcome_notes: Optional[str] = Field(default=None, max_length=2000)
 
 
 class CostRecommendationResponse(BaseModel):

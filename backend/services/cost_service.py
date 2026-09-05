@@ -59,9 +59,9 @@ class CostService:
     def get_analysis_reports(self, facility_id: str, limit: int = 20):
         return self.repository.get_analysis_reports(facility_id, limit)
 
-    def update_recommendation(self, recommendation_id: str, status: str, realized_savings_usd=None, outcome_notes=None):
+    def update_recommendation(self, recommendation_id: str, facility_id: str, status: str, realized_savings_usd=None, outcome_notes=None):
         return self.repository.update_recommendation(
-            recommendation_id, status, realized_savings_usd, outcome_notes
+            recommendation_id, facility_id, status, realized_savings_usd, outcome_notes
         )
 
     def get_module_status(self):

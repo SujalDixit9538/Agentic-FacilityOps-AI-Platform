@@ -9,7 +9,7 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
-def seed_mock_cost_data(db: Session, facility_id: str = "FAC-001", months_back: int = 6):
+def seed_mock_cost_data(db: Session, facility_id: str, months_back: int = 6):
     """
     Generates realistic historical cost records across Energy, Maintenance, and Operations.
     """

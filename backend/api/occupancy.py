@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from typing import List
 
-from backend.api.dependencies import get_db
+from backend.api.dependencies import get_db, require_facility_access
 from backend.services.occupancy_service import OccupancyService
 from backend.services.mock_occupancy_service import seed_mock_occupancy_data
 from backend.schemas.occupancy import (
@@ -34,7 +34,7 @@ async def get_facilities(db: Session = Depends(get_db)):
 
 
 @router.post("/seed")
-async def seed_occupancy_data(facility_id: str = Query("FAC-001"), days: int = Query(7), db: Session = Depends(get_db)):
+async def seed_occupancy_data(facility_id: str = Query(..., min_length=1, max_length=64), days: int = Query(7, ge=1, le=31), db: Session = Depends(get_db)):
     """Triggers the zone generation + mock occupancy/security data pipeline."""
     occ_count, sec_count = seed_mock_occupancy_data(db, facility_id=facility_id, days=days)
     return success_response(
@@ -61,7 +61,7 @@ async def get_utilization(facility_id: str, db: Session = Depends(get_db)):
 
 
 @router.get("/records/{facility_id}")
-async def get_occupancy_records(facility_id: str, limit: int = Query(100), db: Session = Depends(get_db)):
+async def get_occupancy_records(facility_id: str, limit: int = Query(100, ge=1, le=1000), db: Session = Depends(get_db)):
     """Retrieves headcount/utilization time-series for a given facility."""
     service = OccupancyService(db)
     records = service.get_facility_occupancy(facility_id, limit)
@@ -72,6 +72,7 @@ async def get_occupancy_records(facility_id: str, limit: int = Query(100), db: S
 @router.post("/images")
 async def log_image_detection(data: OccupancyImageBase, db: Session = Depends(get_db)):
     """Logs a CNN detection — also mirrors it into occupancy_records (source='cnn') per the hybrid design."""
+    require_facility_access(data.facility_id)
     service = OccupancyService(db)
     image = service.log_image_detection(data)
     return success_response(
@@ -80,7 +81,7 @@ async def log_image_detection(data: OccupancyImageBase, db: Session = Depends(ge
 
 
 @router.get("/security/{facility_id}")
-async def get_security_events(facility_id: str, limit: int = Query(50), db: Session = Depends(get_db)):
+async def get_security_events(facility_id: str, limit: int = Query(50, ge=1, le=500), db: Session = Depends(get_db)):
     """Retrieves security incidents for a given facility."""
     service = OccupancyService(db)
     events = service.get_security_logs(facility_id, limit)

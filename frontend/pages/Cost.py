@@ -112,7 +112,11 @@ else:
             if recommendation_id:
                 status = st.selectbox("Status", ["proposed", "accepted", "completed", "dismissed"], key=f"rec_status_{recommendation_id}")
                 if st.button("Save status", key=f"save_rec_{recommendation_id}", width="content"):
-                    result = safe_patch(f"/cost/recommendations/{recommendation_id}", {"status": status})
+                    result = safe_patch(
+                        f"/cost/recommendations/{recommendation_id}",
+                        {"status": status},
+                        params={"facility_id": selected_facility},
+                    )
                     if result.get("success"):
                         st.success("Recommendation status saved.")
                     else:

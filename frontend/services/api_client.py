@@ -6,6 +6,8 @@ import uuid
 
 # Note: This will be moved to a centralized config file in ETP-004
 BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
+API_AUTH_TOKEN = os.getenv("API_AUTH_TOKEN")
+API_ADMIN_TOKEN = os.getenv("API_ADMIN_TOKEN")
 
 
 def _failure(message: str, fallback_data=None, correlation_id: str | None = None) -> dict:
@@ -23,6 +25,9 @@ def _failure(message: str, fallback_data=None, correlation_id: str | None = None
 def _request(method: str, endpoint: str, *, payload=None, params=None, timeout=5.0, fallback_data=None) -> dict:
     correlation_id = str(uuid.uuid4())
     headers = {"X-Correlation-ID": correlation_id}
+    request_token = API_ADMIN_TOKEN or API_AUTH_TOKEN
+    if request_token:
+        headers["Authorization"] = f"Bearer {request_token}"
     for attempt in range(2):
         try:
             response = requests.request(
@@ -55,6 +60,6 @@ def safe_post(endpoint: str, payload: dict = None, params: dict = None, fallback
     return _request("POST", endpoint, payload=payload, params=params, timeout=10.0, fallback_data=fallback_data)
 
 
-def safe_patch(endpoint: str, payload: dict | None = None, fallback_data=None) -> dict:
+def safe_patch(endpoint: str, payload: dict | None = None, params: dict | None = None, fallback_data=None) -> dict:
     """Issue a persisted update while preserving the standard response envelope."""
-    return _request("PATCH", endpoint, payload=payload, timeout=10.0, fallback_data=fallback_data)
+    return _request("PATCH", endpoint, payload=payload, params=params, timeout=10.0, fallback_data=fallback_data)

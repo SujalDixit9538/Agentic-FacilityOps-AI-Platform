@@ -68,9 +68,10 @@ class CostRepository:
             CostAnalysisReport.facility_id == facility_id
         ).order_by(CostAnalysisReport.generated_at.desc()).limit(limit).all()
 
-    def update_recommendation(self, recommendation_id: str, status: str, realized_savings_usd=None, outcome_notes=None):
+    def update_recommendation(self, recommendation_id: str, facility_id: str, status: str, realized_savings_usd=None, outcome_notes=None):
         recommendation = self.db.query(CostRecommendation).filter(
-            CostRecommendation.recommendation_id == recommendation_id
+            CostRecommendation.recommendation_id == recommendation_id,
+            CostRecommendation.facility_id == facility_id,
         ).first()
         if not recommendation:
             return None

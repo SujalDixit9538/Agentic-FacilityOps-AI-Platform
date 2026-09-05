@@ -14,6 +14,11 @@ class AppSettings(BaseSettings):
     
     # Logging
     LOG_CONFIG_PATH: str = "config/logging.yaml"
+    CORS_ORIGINS: str = "http://localhost:8501,http://127.0.0.1:8501"
+    API_AUTH_TOKEN: Optional[str] = None
+    API_ADMIN_TOKEN: Optional[str] = None
+    FACILITY_ACCESS_ALLOWLIST: str = ""
+    RATE_LIMIT_PER_MINUTE: int = 120
 
     GEMINI_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None

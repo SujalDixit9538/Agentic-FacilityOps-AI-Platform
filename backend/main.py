@@ -8,13 +8,8 @@ from backend.middleware.exceptions import global_exception_handler
 from backend.services.logging_service import setup_logging
 from backend.middleware.timing import timing_middleware
 from backend.core.config import settings
-from backend.database.connection import engine
-from backend.database.base import Base
-from backend.database.connection import SessionLocal
 
 setup_logging()
-
-Base.metadata.create_all(bind=engine)
 
 from contextlib import asynccontextmanager
 
@@ -41,10 +36,10 @@ app.add_middleware(BaseHTTPMiddleware, dispatch=timing_middleware)
 # 3. Foundational Middleware (CORS)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Correlation-ID"],
 )
 
 # 4. Register API Router

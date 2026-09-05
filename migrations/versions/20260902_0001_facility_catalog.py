@@ -13,18 +13,20 @@ depends_on = None
 
 
 def upgrade():
-    op.create_table(
-        "facilities",
-        sa.Column("facility_id", sa.String(length=64), primary_key=True),
-        sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("facility_type", sa.String(length=64)),
-        sa.Column("total_area_sqft", sa.Float),
-        sa.Column("total_floors", sa.Integer),
-        sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-    )
-
     bind = op.get_bind()
+    existing_tables = set(inspect(bind).get_table_names())
+    if "facilities" not in existing_tables:
+        op.create_table(
+            "facilities",
+            sa.Column("facility_id", sa.String(length=64), primary_key=True),
+            sa.Column("name", sa.String(length=255), nullable=False),
+            sa.Column("facility_type", sa.String(length=64)),
+            sa.Column("total_area_sqft", sa.Float),
+            sa.Column("total_floors", sa.Integer),
+            sa.Column("is_active", sa.Boolean(), nullable=False, server_default=sa.true()),
+            sa.Column("created_at", sa.DateTime(), nullable=False),
+        )
+
     # The repository has no pre-catalog migration history, so create the current
     # ORM tables on a fresh database before applying data-preserving changes.
     Base.metadata.create_all(bind=bind)

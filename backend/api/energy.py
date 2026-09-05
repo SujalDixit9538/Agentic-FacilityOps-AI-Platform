@@ -28,7 +28,7 @@ async def energy_module_health(db: Session = Depends(get_db)):
     return success_response(message="Energy module health check", data=status)
 
 @router.post("/seed")
-async def seed_energy_data(facility_id: str = Query("FAC-001"), days: int = Query(7), db: Session = Depends(get_db)):
+async def seed_energy_data(facility_id: str = Query(..., min_length=1, max_length=64), days: int = Query(7, ge=1, le=31), db: Session = Depends(get_db)):
     """Triggers the mock IoT ingestion pipeline for a given facility."""
     count = seed_mock_energy_data(db, facility_id=facility_id, days=days)
     return success_response(
@@ -37,7 +37,7 @@ async def seed_energy_data(facility_id: str = Query("FAC-001"), days: int = Quer
     )
 
 @router.get("/records/{facility_id}", response_model=dict)
-async def get_energy_records(facility_id: str, limit: int = 200, db: Session = Depends(get_db)):
+async def get_energy_records(facility_id: str, limit: int = Query(200, ge=1, le=1000), db: Session = Depends(get_db)):
     """Retrieves basic energy consumption records for a facility."""
     service = EnergyService(db)
     records = service.get_facility_energy_history(facility_id, limit)
@@ -78,7 +78,7 @@ async def get_energy_dashboard(facility_id: str, db: Session = Depends(get_db)):
     return response
 
 @router.get("/analyze/{facility_id}")
-async def analyze_energy(facility_id: str, days: int = Query(7), db: Session = Depends(get_db)):
+async def analyze_energy(facility_id: str, days: int = Query(7, ge=1, le=31), db: Session = Depends(get_db)):
     """Runs the Energy Agent analysis on the specified facility."""
     service = EnergyService(db)
     insights = service.run_agent_analysis(facility_id, days)

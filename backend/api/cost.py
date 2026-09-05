@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from backend.api.dependencies import get_db
+from backend.api.dependencies import get_db, require_facility_access
 from backend.services.cost_service import CostService
 from backend.schemas.cost import CostRecordBase, CostRecordResponse, CostRecommendationUpdate, CostRecommendationResponse
 from backend.utils.api_responses import success_response
@@ -24,6 +24,7 @@ async def get_cost_facilities(db: Session = Depends(get_db)):
 @router.post("/records", response_model=None)
 async def create_cost_record(data: CostRecordBase, db: Session = Depends(get_db)):
     """Ingests one validated expense into the facility ledger."""
+    require_facility_access(data.facility_id)
     record = CostService(db).log_facility_cost(data)
     return success_response(message="Cost record created", data=CostRecordResponse.model_validate(record).model_dump())
 
@@ -35,7 +36,7 @@ async def cost_module_health(db: Session = Depends(get_db)):
     return success_response(message="Cost module health check", data=status)
 
 @router.post("/seed")
-async def seed_cost_data(facility_id: str = Query("FAC-001"), months: int = Query(6), db: Session = Depends(get_db)):
+async def seed_cost_data(facility_id: str = Query(..., min_length=1, max_length=64), months: int = Query(6, ge=1, le=24), db: Session = Depends(get_db)):
     """Triggers the mock financial data pipeline."""
     records_count = seed_mock_cost_data(db, facility_id=facility_id, months_back=months)
     return success_response(
@@ -44,7 +45,7 @@ async def seed_cost_data(facility_id: str = Query("FAC-001"), months: int = Quer
     )
 
 @router.get("/records/{facility_id}")
-async def get_cost_records(facility_id: str, limit: int = Query(100), db: Session = Depends(get_db)):
+async def get_cost_records(facility_id: str, limit: int = Query(100, ge=1, le=1000), db: Session = Depends(get_db)):
     """Retrieves financial expense records for a given facility."""
     service = CostService(db)
     records = service.get_facility_costs(facility_id, limit)
@@ -100,9 +101,9 @@ async def get_cost_reports(facility_id: str, limit: int = Query(20, ge=1, le=100
     })
 
 @router.patch("/recommendations/{recommendation_id}")
-async def update_cost_recommendation(recommendation_id: str, data: CostRecommendationUpdate, db: Session = Depends(get_db)):
+async def update_cost_recommendation(recommendation_id: str, data: CostRecommendationUpdate, facility_id: str = Query(..., min_length=1, max_length=64), db: Session = Depends(get_db)):
     recommendation = CostService(db).update_recommendation(
-        recommendation_id, data.status, data.realized_savings_usd, data.outcome_notes
+        recommendation_id, facility_id, data.status, data.realized_savings_usd, data.outcome_notes
     )
     if not recommendation:
         raise HTTPException(status_code=404, detail="Recommendation not found")

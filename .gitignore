@@ -38,3 +38,5 @@ tests/**/__pycache__/
 tests/**/*.pyc
 
 x.md
+docs/DECISION_LOG.md
+ENGINEERING_RECOVERY_STATE.md

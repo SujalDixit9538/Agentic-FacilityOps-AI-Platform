@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--facility-id", action="append", dest="facility_ids")
     args = parser.parse_args()
     source_ids = pd.read_csv("data/processed_facilities.csv")["facility_id"].dropna().tolist()
-    facility_ids = args.facility_ids or ["FAC-001", "FAC-002", *source_ids]
+    facility_ids = args.facility_ids or source_ids
 
     db = SessionLocal()
     try:

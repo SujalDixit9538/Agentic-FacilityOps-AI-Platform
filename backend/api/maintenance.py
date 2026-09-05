@@ -27,7 +27,7 @@ async def get_facilities(db: Session = Depends(get_db)):
     return success_response(message="Retrieved facilities", data={"facilities": facility_list})
 
 @router.post("/seed")
-async def seed_maintenance_data(facility_id: str = Query(None), db: Session = Depends(get_db)):
+async def seed_maintenance_data(facility_id: str = Query(..., min_length=1, max_length=64), db: Session = Depends(get_db)):
     """Triggers the mock asset and maintenance history pipeline."""
     # If no facility_id provided, default to first in CSV
     import pandas as pd
@@ -56,7 +56,7 @@ async def get_assets(facility_id: str, db: Session = Depends(get_db)):
     return success_response(message=f"Retrieved {len(data)} assets", data={"assets": data})
 
 @router.get("/logs/{asset_id}")
-async def get_maintenance_logs(asset_id: str, limit: int = 50, db: Session = Depends(get_db)):
+async def get_maintenance_logs(asset_id: str, limit: int = Query(50, ge=1, le=500), db: Session = Depends(get_db)):
     """Retrieves the maintenance history for a given asset."""
     service = MaintenanceService(db)
     logs = service.get_asset_maintenance_history(asset_id, limit)

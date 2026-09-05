@@ -1,16 +1,16 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
 
 class OccupancyZoneBase(BaseModel):
-    facility_id: str
-    floor: int
-    zone_name: str
-    zone_type: str
-    max_capacity: int
-    area_sqft: Optional[float] = None
-    x_position: Optional[float] = None
-    y_position: Optional[float] = None
+    facility_id: str = Field(min_length=1, max_length=64)
+    floor: int = Field(ge=1, le=10_000)
+    zone_name: str = Field(min_length=1, max_length=128)
+    zone_type: str = Field(min_length=1, max_length=64)
+    max_capacity: int = Field(ge=1, le=10_000_000)
+    area_sqft: Optional[float] = Field(default=None, ge=0, le=100_000_000)
+    x_position: Optional[float] = Field(default=None, ge=0, le=1)
+    y_position: Optional[float] = Field(default=None, ge=0, le=1)
 
 class OccupancyZoneResponse(OccupancyZoneBase):
     zone_id: str
@@ -18,10 +18,10 @@ class OccupancyZoneResponse(OccupancyZoneBase):
         from_attributes = True
 
 class OccupancyRecordBase(BaseModel):
-    facility_id: str
-    zone_id: str
-    occupancy_count: int
-    source: str = "sensor"
+    facility_id: str = Field(min_length=1, max_length=64)
+    zone_id: str = Field(min_length=1, max_length=128)
+    occupancy_count: int = Field(ge=0, le=10_000_000)
+    source: str = Field(default="sensor", min_length=1, max_length=64)
     timestamp: datetime
 
 class OccupancyRecordResponse(OccupancyRecordBase):
@@ -30,14 +30,14 @@ class OccupancyRecordResponse(OccupancyRecordBase):
         from_attributes = True
 
 class OccupancyImageBase(BaseModel):
-    facility_id: str
-    zone_id: str
-    camera_id: Optional[str] = None
-    image_path: Optional[str] = None
+    facility_id: str = Field(min_length=1, max_length=64)
+    zone_id: str = Field(min_length=1, max_length=128)
+    camera_id: Optional[str] = Field(default=None, max_length=128)
+    image_path: Optional[str] = Field(default=None, max_length=500)
     captured_at: datetime
-    detected_count: Optional[int] = None
-    confidence_score: Optional[float] = None
-    model_version: Optional[str] = None
+    detected_count: Optional[int] = Field(default=None, ge=0, le=10_000_000)
+    confidence_score: Optional[float] = Field(default=None, ge=0, le=1)
+    model_version: Optional[str] = Field(default=None, max_length=128)
     processed_at: Optional[datetime] = None
 
 class OccupancyImageResponse(OccupancyImageBase):
@@ -59,13 +59,13 @@ class OccupancyForecastResponse(OccupancyForecastBase):
         from_attributes = True
 
 class SecurityEventBase(BaseModel):
-    facility_id: str
-    event_type: str
-    severity: str
+    facility_id: str = Field(min_length=1, max_length=64)
+    event_type: str = Field(min_length=1, max_length=128)
+    severity: Literal["Low", "Medium", "High", "Critical"]
     event_time: datetime
-    status: str = "Open"
-    zone_level: Optional[int] = None
-    recent_failed_attempts: Optional[int] = None
+    status: Literal["Open", "Investigating", "Closed"] = "Open"
+    zone_level: Optional[int] = Field(default=None, ge=0, le=10)
+    recent_failed_attempts: Optional[int] = Field(default=None, ge=0, le=1_000_000)
 
 class SecurityEventResponse(SecurityEventBase):
     event_id: str

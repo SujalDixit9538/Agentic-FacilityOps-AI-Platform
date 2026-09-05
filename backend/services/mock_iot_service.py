@@ -9,7 +9,7 @@ import uuid
 
 logger = logging.getLogger(__name__)
 
-def seed_mock_energy_data(db: Session, facility_id: str = "FAC-001", days: int = 7):
+def seed_mock_energy_data(db: Session, facility_id: str, days: int = 7):
     """
     Generates realistic historical energy consumption records and persists them 
     via the EnergyRepository. Satisfies ETP-007 requirements.

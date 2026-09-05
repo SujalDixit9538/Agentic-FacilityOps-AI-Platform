@@ -47,7 +47,7 @@ def _resolve_facility_row(facility_id: str):
     return "Office", 50000.0, 3
 
 
-def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: int = 7):
+def seed_mock_occupancy_data(db: Session, facility_id: str, days: int = 7):
     """
     Generates a real per-facility zone layout (if not already present), then
     realistic historical occupancy headcounts and correlated security events.
@@ -79,9 +79,8 @@ def seed_mock_occupancy_data(db: Session, facility_id: str = "FAC-001", days: in
     occ_created = 0
     sec_created = 0
 
-    # 3. Generate Deterministic Time-Series Occupancy (30 days, Hourly, per real zone)
+    # 3. Generate deterministic time-series occupancy for the requested window.
     random.seed(42)
-    days = 30
     base_time = datetime.datetime.utcnow() - datetime.timedelta(days=days)
     occ_created = 0
     meeting_room_zones = [zone for zone in zones if zone.zone_type == "meeting_room"]
