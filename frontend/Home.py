@@ -10,160 +10,51 @@ if root_dir not in sys.path:
 from frontend.utils.session import initialize_session
 from frontend.services.api_client import safe_get
 from frontend.components.kpi_cards import render_kpi_row
-from frontend.components.status import render_status_banner
 
-# Must be the very first Streamlit command
-st.set_page_config(
-    page_title="FacilityOPS AI",
-    page_icon="🏢",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
-
-# Initialize global state
+st.set_page_config(page_title="FacilityOPS AI", page_icon="🏢", layout="wide", initial_sidebar_state="expanded")
 initialize_session()
 
-st.title("**Agentic FacilityOPS AI Platform**")
-st.markdown("### Executive Operations Center")
+st.markdown("""
+<style>
+.stApp{background:#f4f7fb}.hero{background:linear-gradient(135deg,#0f172a,#1e3a8a 58%,#0f766e);color:#fff;border-radius:20px;padding:28px 30px;margin-bottom:18px;box-shadow:0 12px 30px rgba(15,23,42,.12)}.eyebrow{font-size:10px;font-weight:800;letter-spacing:.16em;color:#93c5fd;text-transform:uppercase}.hero h1{font-size:32px;margin:4px 0}.hero p{color:#cbd5e1;margin:0;font-size:14px}.module{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;min-height:150px;box-shadow:0 4px 14px rgba(15,23,42,.04)}.module h3{margin:0 0 7px}.module p{color:#64748b;font-size:12px;min-height:36px}.brief{background:#fff;border:1px solid #e2e8f0;border-left:4px solid #2563eb;border-radius:15px;padding:18px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+</style>
+<div class="hero"><div class="eyebrow">FacilityOPS AI · Command Center</div><h1>Facility Operations Intelligence</h1><p>One operational view across energy, assets, occupancy, security and cost performance.</p></div>
+""", unsafe_allow_html=True)
 
-# Integration Test: Fetch backend health
-with st.spinner("Connecting to platform services..."):
-    health_data = safe_get("/health", fallback_data={"status": "unreachable", "database": "unreachable"}) or {}
-    health_checked_at = datetime.now(timezone.utc)
-
-# Evaluate platform status
-backend_online = health_data.get("success", False)
+with st.spinner("Connecting to facility intelligence services..."):
+    health_data = safe_get("/health", fallback_data={"status":"unavailable"}) or {}
 health_payload = health_data.get("data", {}) or {}
+backend_online = health_data.get("success", False)
 db_operational = health_payload.get("database") == "operational"
-health_timestamp = (
-    health_payload.get("request_time")
-    or health_payload.get("timestamp")
-    or health_payload.get("checked_at")
-    or health_checked_at.strftime("%Y-%m-%d %H:%M:%S UTC")
-)
+checked = health_payload.get("request_time") or datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
 if backend_online and db_operational:
-    st.success("Platform connection established. All systems nominal.")
-else:
-    render_status_banner(
-        is_online=False, 
-        custom_message="Platform is running in degraded mode. Some services may be unavailable."
-    )
+    st.success("Facility intelligence services are connected and ready.")
 
-st.divider()
+st.markdown("### Platform Overview")
+render_kpi_row([
+    {"title":"Platform", "value":"Ready" if backend_online else "Checking", "delta":"Connected" if backend_online else "Pending"},
+    {"title":"Data Services", "value":"Ready" if db_operational else "Checking", "delta":"Connected" if db_operational else "Pending"},
+    {"title":"AI Modules", "value":"Multi-Agent", "delta":"Ready"},
+    {"title":"Interface", "value":"Operator Ready", "delta":"Live"},
+    {"title":"Last Checked", "value":checked, "delta":None},
+], columns=3)
 
-st.markdown("### System Status")
-status_cards = [
-    {
-        "title": "Backend API",
-        "value": "Operational" if backend_online else "Offline",
-        "delta": "Online" if backend_online else "Degraded",
-        "help": health_data.get("message", "Health endpoint unavailable."),
-    },
-    {
-        "title": "Database Layer",
-        "value": "Operational" if db_operational else "Offline",
-        "delta": "Connected" if db_operational else "Check required",
-        "help": f"Health payload: {health_payload.get('database', 'unreachable')}",
-    },
-    {
-        "title": "Frontend Interface",
-        "value": "Operational",
-        "delta": "Available",
-        "help": "Streamlit application is loaded.",
-    },
-    {
-        "title": "Active Agents",
-        "value": "Energy Agent",
-        "delta": "Available",
-        "help": "Configured agent surfaced on the home dashboard.",
-    },
-    {
-        "title": "Last Checked",
-        "value": health_timestamp,
-        "delta": None,
-        "help": "Captured from the current health check.",
-    },
-]
-render_kpi_row(status_cards, columns=3)
-
-st.markdown("### Available Modules")
+st.markdown("### Operations Suite")
 modules = [
-    {
-        "name": "Executive Dashboard",
-        "icon": "🌐",
-        "page": "pages/Dashboard.py",
-        "summary": "Cross-module intelligence and portfolio reporting.",
-    },
-    {
-        "name": "Energy Analytics",
-        "icon": "⚡",
-        "page": "pages/Energy.py",
-        "summary": "Energy records, diagnostics, and optimization workflows.",
-    },
-    {
-        "name": "Predictive Maintenance",
-        "icon": "🔧",
-        "page": "pages/Maintenance.py",
-        "summary": "Asset health review and maintenance intelligence.",
-    },
-    {
-        "name": "Cost Intelligence",
-        "icon": "💵",
-        "page": "pages/Cost.py",
-        "summary": "Facility cost records and financial analysis.",
-    },
-    {
-        "name": "Occupancy & Security",
-        "icon": "🛡️",
-        "page": "pages/Occupancy_and_Security.py",
-        "summary": "Occupancy signals and security event review.",
-    },
+    ("🌐","Executive Intelligence","Cross-agent facility briefings, analytics and reporting.","pages/Dashboard.py"),
+    ("⚡","Energy Intelligence","Consumption, demand and energy optimization workflows.","pages/Energy.py"),
+    ("🔧","Predictive Maintenance","Asset health, condition assessment and maintenance actions.","pages/Maintenance.py"),
+    ("💰","Cost Intelligence","Spend analysis, cost drivers and savings opportunities.","pages/Cost.py"),
+    ("🛡️","Occupancy & Security","Zone utilization, incidents and physical-security intelligence.","pages/Occupancy_and_Security.py"),
+    ("🧪","Scenario Lab","Test operational conditions and generate instant results and recommendations.","pages/Scenario_Lab.py"),
 ]
+for start in range(0,len(modules),3):
+    cols=st.columns(3)
+    for col,(icon,name,summary,page) in zip(cols,modules[start:start+3]):
+        with col:
+            st.markdown(f'<div class="module"><h3>{icon} {name}</h3><p>{summary}</p></div>',unsafe_allow_html=True)
+            st.page_link(page,label=f"Open {name}",icon=icon,width="stretch")
 
-for row_start in range(0, len(modules), 3):
-    row_modules = modules[row_start:row_start + 3]
-    for column, module in zip(st.columns(3), row_modules):
-        with column:
-            with st.container(border=True):
-                st.subheader(f"{module['icon']} {module['name']}")
-                st.caption(module["summary"])
-                st.page_link(
-                    module["page"],
-                    label=f"Open {module['name']}",
-                    icon=module["icon"],
-                    width="stretch",
-                )
-
-st.markdown("### Quick Actions")
-quick_cols = st.columns([1, 1, 1, 1])
-with quick_cols[0]:
-    st.page_link(
-        "pages/Dashboard.py",
-        label="Executive Report",
-        icon="🌐",
-        width="stretch",
-    )
-with quick_cols[1]:
-    st.page_link(
-        "pages/Energy.py",
-        label="Energy Review",
-        icon="⚡",
-        width="stretch",
-    )
-with quick_cols[2]:
-    st.page_link(
-        "pages/Maintenance.py",
-        label="Asset Review",
-        icon="🔧",
-        width="stretch",
-    )
-with quick_cols[3]:
-    if st.button("Refresh Status", icon="🔄", width="stretch"):
-        st.rerun()
-
-placeholder_cols = st.columns(2)
-with placeholder_cols[0]:
-    st.button("Global Diagnostics", disabled=True, width="stretch")
-with placeholder_cols[1]:
-    st.button("Alert Inbox", disabled=True, width="stretch")
+st.markdown("### Operator Brief")
+st.markdown('<div class="brief"><b>Start with a live module</b><br><span style="color:#64748b;font-size:12px">Review current facility intelligence, then use Scenario Lab to test a specific operating condition and see how FacilityOPS responds.</span></div>',unsafe_allow_html=True)
