@@ -1,1 +1,0 @@
-GitHub branch write test. This file is intentionally temporary and will be removed once branch write capability is confirmed.
