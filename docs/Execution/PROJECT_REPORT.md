@@ -403,7 +403,3 @@ Required test layers:
 - Database failure, stale telemetry, missing model, LLM failure, and empty facility states are all visible and actionable.
 - Unauthorized requests cannot read or mutate facility data.
 - The Cost page is understandable without knowing what an “agent” or model fallback is.
-
-## Suggested first implementation request
-
-“Implement Phase 0 and Phase 1 from `PROJECT_AUDIT_REPORT.md`: clean the dependency/test baseline, centralize facility IDs, add migrations and constraints, fix readiness semantics, and make every page render with explicit empty/degraded states. Do not add new features until the baseline test suite is green.”
