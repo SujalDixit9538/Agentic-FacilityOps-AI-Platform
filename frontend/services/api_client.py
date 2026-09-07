@@ -1,10 +1,38 @@
-import requests
 import logging
 import os
 import time
 import uuid
+from pathlib import Path
 
-# Note: This will be moved to a centralized config file in ETP-004
+import requests
+
+
+def _load_local_env() -> None:
+    """Load non-secret local .env values when the frontend is started outside dotenv-aware tooling.
+
+    Existing process environment variables always win. Values are read only to configure the
+    local frontend client; secrets are never logged or displayed.
+    """
+    env_path = Path(__file__).resolve().parents[2] / ".env"
+    if not env_path.exists():
+        return
+    try:
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key and value and key not in os.environ:
+                os.environ[key] = value
+    except OSError:
+        # The API client will simply operate without optional local credentials.
+        return
+
+
+_load_local_env()
+
 BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000/api/v1")
 API_AUTH_TOKEN = os.getenv("API_AUTH_TOKEN")
 API_ADMIN_TOKEN = os.getenv("API_ADMIN_TOKEN")
@@ -46,20 +74,14 @@ def _request(method: str, endpoint: str, *, payload=None, params=None, timeout=5
                 time.sleep(0.1)
     return _failure("Service unavailable. No verified data was received.", fallback_data, correlation_id)
 
+
 def safe_get(endpoint: str, fallback_data=None) -> dict:
-    """
-    Executes a GET request with strict timeout and fallback handling.
-    Enforces Blueprint Rules 5.1 (No crashes) and 5.2 (Timeout handling).
-    """
     return _request("GET", endpoint, timeout=5.0, fallback_data=fallback_data)
 
+
 def safe_post(endpoint: str, payload: dict = None, params: dict = None, fallback_data=None) -> dict:
-    """
-    Executes a POST request with strict timeout and fallback handling.
-    """
     return _request("POST", endpoint, payload=payload, params=params, timeout=10.0, fallback_data=fallback_data)
 
 
 def safe_patch(endpoint: str, payload: dict | None = None, params: dict | None = None, fallback_data=None) -> dict:
-    """Issue a persisted update while preserving the standard response envelope."""
     return _request("PATCH", endpoint, payload=payload, params=params, timeout=10.0, fallback_data=fallback_data)
