@@ -1,203 +1,78 @@
 import sys
 from pathlib import Path
 root_dir = str(Path(__file__).parent.parent.parent.absolute())
-if root_dir not in sys.path:
-    sys.path.insert(0, root_dir)
-
+if root_dir not in sys.path: sys.path.insert(0, root_dir)
 import pandas as pd
 import streamlit as st
 from frontend.services.api_client import safe_get, safe_post
 from frontend.services.page_data import get_facilities
-from frontend.components.ui import (
-    kpi_card,
-    health_gauge,
-    health_distribution_bar,
-    risk_table,
-    sensor_simulator_panel,
-    alert_feed
-)
-from frontend.utils.theme import COLORS
 
-# Page Configuration
-st.set_page_config(page_title="Maintenance | FacilityOPS", layout="wide")
-
-def inject_theme():
-    """Injects styles for consistent, clean look."""
-    st.markdown(f"""
-    <style>
-        .stApp {{ background-color: {COLORS['bg']}; color: {COLORS['text_pri']}; }}
-        h1, h2, h3, h4 {{ color: {COLORS['text_pri']} !important; font-weight: 600 !important; }}
-        .stButton > button {{ border-radius: 8px; border: 1px solid {COLORS['border']}; background-color: {COLORS['surface']}; color: {COLORS['text_pri']}; }}
-        .stSelectbox > div {{ background-color: {COLORS['surface']}; }}
-        .stMarkdown {{ color: {COLORS['text_pri']}; }}
-    </style>
-    """, unsafe_allow_html=True)
-
-inject_theme()
-
+st.set_page_config(page_title="Maintenance | FacilityOPS", page_icon="🛠️", layout="wide", initial_sidebar_state="expanded")
+st.markdown("""
+<style>
+[data-testid="stAppViewContainer"]{background:#f7f9fc}[data-testid="stSidebar"]{background:#fff}.block-container{padding-top:1.5rem;padding-bottom:3rem}
+.hero{padding:1.4rem 1.6rem;border:1px solid #e5eaf1;border-radius:18px;background:linear-gradient(135deg,#fff,#f3f7fb);margin-bottom:1.1rem}.eyebrow{font-size:.78rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.62}.hero h1{margin:.15rem 0 .25rem;font-size:2.15rem}.hero p{margin:0;opacity:.68}.card{border:1px solid #e5eaf1;border-radius:16px;background:#fff;padding:1rem 1.1rem;min-height:105px;box-shadow:0 2px 10px rgba(20,35,55,.035)}.card-label{font-size:.78rem;opacity:.62;font-weight:600}.card-value{font-size:1.65rem;font-weight:750;margin-top:.3rem}.card-note{font-size:.78rem;opacity:.58;margin-top:.2rem}.section-title{font-size:1.15rem;font-weight:750;margin:1.3rem 0 .65rem}.insight{border-left:4px solid #4f6f8f;padding:.8rem 1rem;background:#fff;border-radius:0 12px 12px 0;border:1px solid #e5eaf1}
+</style>""", unsafe_allow_html=True)
+def card(label,value,note=""):
+    st.markdown(f'<div class="card"><div class="card-label">{label}</div><div class="card-value">{value}</div><div class="card-note">{note}</div></div>',unsafe_allow_html=True)
 with st.sidebar:
-    st.markdown("### ⚙️ Module Controls")
-    
-    # Fetch facilities from backend
-    facilities, _ = get_facilities()
-    if not facilities:
-        st.warning("No facilities are available from the canonical catalog.")
-        st.stop()
-    
-    seed_facility = st.selectbox("Target Facility", facilities, key="maint_seed_target")
-
-    if st.button("🔄 Trigger Mock Data Ingestion", width="stretch"):
-        with st.spinner("Provisioning assets..."):
-            res = safe_post("/maintenance/seed", params={"facility_id": seed_facility})
-            if res.get("success"):
-                data = res.get("data")
-                count = 0
-                if isinstance(data, list) and len(data) > 0:
-                    count = data[0].get("assets_seeded", 0)
-                elif isinstance(data, dict):
-                    count = data.get("assets_seeded", 0)
-                st.success(f"Ingested {count} assets.")
-                st.rerun() 
-            else:
-                st.error("Ingestion pipeline failed.")
-
-st.title(f"Predictive Maintenance: {seed_facility}")
-
-# Facility Selection
-selected_facility = seed_facility
-
-# Data Retrieval
-assets_response = safe_get(f"/maintenance/assets-analyzed/{selected_facility}")
-assets = assets_response.get("data", {}).get("assets", []) if assets_response else []
-
-if not assets:
-    st.warning("No assets registered for this facility.")
-else:
-    df_assets = pd.DataFrame(assets)
-    
-    # Header: Fleet Health
-    if 'health_score' in df_assets.columns:
-        valid_health = df_assets['health_score'].dropna()
-        if not valid_health.empty:
-            avg_health = valid_health.mean()
-            st.markdown(f"### Overall Fleet Health: {avg_health:.1f}%")
-            health_gauge(avg_health, title="Facility Average Health Score", size="small")
-    
-    # Compute Metrics
-    num_assets = len(df_assets)
-    open_tickets = len(df_assets[df_assets['status'] == 'Maintenance Required']) if 'status' in df_assets.columns else 0
-    # Fix: use column selection syntax properly instead of dict-like get()
-    crit_risk = len(df_assets[df_assets['failure_probability'] > 0.5]) if 'failure_probability' in df_assets.columns else 0
-    avg_health = df_assets['health_score'].mean() if 'health_score' in df_assets.columns else 0.0
-    
-    # KPI Row
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        kpi_card("Assets Monitored", str(num_assets), icon="🏢")
-    with col2:
-        kpi_card("Open Work Orders", str(open_tickets), status="warning" if open_tickets > 0 else "good")
-    with col3:
-        kpi_card("Critical Risks", str(crit_risk), status="critical" if crit_risk > 0 else "good")
-    with col4:
-        kpi_card("Avg Fleet Health", f"{avg_health:.1f}%", status="good" if avg_health >= 80 else "warning")
-
-        
-    # Health Distribution
-    if 'health_score' in df_assets.columns:
-        def get_bucket(score):
-            if pd.isna(score): 
-                return "Unknown"
-            if score >= 90: 
-                return "Excellent"
-            if score >= 70: 
-                return "Good"
-            if score >= 50: 
-                return "Warning"
-            return "Critical"
-        
-        df_assets['bucket'] = df_assets['health_score'].apply(get_bucket)
-        counts = df_assets['bucket'].value_counts(normalize=True) * 100
-        
-        st.markdown("### Fleet Health Distribution")
-        health_distribution_bar(counts.to_dict())
-    
-    # Sensor Simulator
-    def run_prediction(inputs):
-        res = safe_post("/maintenance/predict-manual", payload=inputs)
-        data = res.get("data")
-        # Map the response structure to the format expected by the UI
-        if isinstance(data, dict) and "metrics" in data:
-            return {
-                "health_score": data["metrics"].get("asset_health_score", 0),
-                "failure_probability": data["metrics"].get("failure_probability", 1.0 - (data["metrics"].get("asset_health_score", 100.0) / 100.0))
-            }
-        return {"health_score": 0, "failure_probability": 0}
-        
-    sensor_simulator_panel(run_prediction)
-    
-    # Assets Table
-    st.markdown("### Asset Risk Overview")
-    df_assets['temp_status'] = df_assets['process_temp'].apply(
-        lambda x: "🔴 High" if pd.notna(x) and x > 315 else ("🟢 Normal" if pd.notna(x) else "N/A")
-    )
-    
-    # Render table with action buttons
-    for _, asset in df_assets.iterrows():
-        cols = st.columns([4, 1])
-        with cols[0]:
-            st.write(f"**{asset['asset_id']}** ({asset['asset_type']}) - Status: {asset['status']}")
-            st.caption(f"Issue: {asset['predicted_issue']} | Health: {asset['health_score']}%")
-        with cols[1]:
-            if st.button("Generate Order", key=f"btn_{asset['asset_id']}"):
-            # if st.button("🛠️ AI Order", key=f"btn_{asset['asset_id']}"):
-                with st.spinner("Generating..."):
-                    res = safe_post(f"/maintenance/generate-workorder/{asset['asset_id']}")
-                    if res.get("success"):
-                        st.session_state[f"order_{asset['asset_id']}"] = res.get("data", {})
-                        st.toast("Work order generated!")
-                        st.rerun()
-                    else:
-                        st.error("Failed.")
-        
-        # Display stored order if exists
-        order_data = st.session_state.get(f"order_{asset['asset_id']}")
-        if order_data:
-            with st.expander("Order Details", expanded=True):
-                st.write(f"**Urgency:** {order_data.get('urgency')}")
-                st.write(f"**Date:** {order_data.get('recommended_date')}")
-                st.write(f"**Summary:** {order_data.get('work_order_summary')}")
-                st.write(f"**Actions:** {', '.join(order_data.get('actions', []))}")
-                if st.button("Clear", key=f"clr_{asset['asset_id']}"):
-                    del st.session_state[f"order_{asset['asset_id']}"]
-                    st.rerun()
-
-    # Alerts
-    st.markdown("### Active Alerts")
-    
-    # Filter assets for alerts (only those with valid health_score)
-    df_alerts = df_assets[df_assets['health_score'].notna()].copy()
-    
-    alerts = []
-    for _, row in df_alerts.iterrows():
-        score = row['health_score']
-        prob = row['failure_probability'] if pd.notna(row['failure_probability']) else 0
-        
-        if score < 50:
-            alerts.append({
-                "severity": "high",
-                "title": f"{row['asset_id']} ({row['asset_type']}) - Critical Health",
-                "description": f"Health score: {score:.1f}<br>Failure probability: {prob:.0%}",
-                "facility": selected_facility
-            })
-        elif score < 70:
-            alerts.append({
-                "severity": "medium",
-                "title": f"{row['asset_id']} ({row['asset_type']}) - Warning Health",
-                "description": f"Health score: {score:.1f}<br>Failure probability: {prob:.0%}",
-                "facility": selected_facility
-            })
-            
-    if alerts:
-        alert_feed(alerts)
-    else:
-        st.info("No active alerts. System status stable.")
+    st.markdown("## FacilityOPS"); st.caption("Predictive Maintenance")
+    facilities,_=get_facilities()
+    if not facilities: st.error("No facilities available."); st.stop()
+    selected_facility=st.selectbox("Facility",facilities,key="maintenance_facility")
+    st.divider()
+    if st.button("Refresh asset intelligence",use_container_width=True): st.rerun()
+st.markdown('<div class="hero"><div class="eyebrow">Asset Intelligence</div><h1>Predictive Maintenance</h1><p>Monitor equipment health, investigate risk and turn predictions into maintenance actions.</p></div>',unsafe_allow_html=True)
+st.caption(f"Active facility: {selected_facility}")
+assets_response=safe_get(f"/maintenance/assets-analyzed/{selected_facility}"); assets=assets_response.get("data",{}).get("assets",[]) if assets_response else []
+if not assets: st.info("No asset records are currently available for this facility."); st.stop()
+df=pd.DataFrame(assets)
+for col in ["health_score","failure_probability","process_temp","air_temp","speed","torque","wear"]:
+    if col in df: df[col]=pd.to_numeric(df[col],errors="coerce")
+avg_health=float(df.health_score.dropna().mean()) if "health_score" in df and df.health_score.notna().any() else None
+high_risk=int((df.failure_probability>=.5).sum()) if "failure_probability" in df else 0
+needs_attention=int((df.health_score<70).sum()) if "health_score" in df else 0
+cols=st.columns(4)
+with cols[0]: card("Assets monitored",len(df),"Active asset intelligence")
+with cols[1]: card("Fleet health",f"{avg_health:.1f}%" if avg_health is not None else "Awaiting model","Model-derived health")
+with cols[2]: card("High-risk assets",high_risk,"Prioritize for review")
+with cols[3]: card("Needs attention",needs_attention,"Health below 70%")
+st.markdown('<div class="section-title">Fleet health overview</div>',unsafe_allow_html=True)
+left,right=st.columns([1.35,1])
+with left:
+    if "health_score" in df and df.health_score.notna().any(): st.bar_chart(df.health_score.dropna().clip(0,100).reset_index(drop=True),height=230)
+    else: st.info("Health predictions are not available for the current asset set.")
+with right:
+    if "failure_probability" in df and df.failure_probability.notna().any(): st.line_chart((df.failure_probability.dropna().clip(0,1)*100).reset_index(drop=True),height=230)
+    else: st.info("Risk predictions are not available for the current asset set.")
+st.markdown('<div class="section-title">Maintenance test case</div>',unsafe_allow_html=True); st.caption("Run the deployed maintenance ML models against a telemetry scenario.")
+with st.expander("Open predictive test case",expanded=True):
+    asset_type=st.selectbox("Asset class",["L","M","H"],index=1,format_func=lambda x:{"L":"Low load (L)","M":"Medium load (M)","H":"High load (H)"}[x])
+    c1,c2,c3=st.columns(3)
+    with c1: air_temp=st.number_input("Air temperature (K)",value=298.1,step=.1,format="%.1f"); process_temp=st.number_input("Process temperature (K)",value=308.6,step=.1,format="%.1f")
+    with c2: speed=st.number_input("Rotational speed (rpm)",value=1500.0,step=10.0); torque=st.number_input("Torque (Nm)",value=40.0,step=1.0)
+    with c3: wear=st.number_input("Tool/component wear (min)",value=100.0,step=1.0); st.caption("Increase temperature, torque or wear to explore model response.")
+    if st.button("Run predictive analysis",type="primary",use_container_width=True):
+        payload={"type":asset_type,"air_temp":air_temp,"process_temp":process_temp,"speed":speed,"torque":torque,"wear":wear}
+        with st.spinner("Running maintenance models..."): result=safe_post("/maintenance/predict-manual",payload=payload)
+        if result.get("success"): st.session_state["maintenance_scenario"]=result.get("data") or {}
+        else: st.error("Predictive analysis could not be completed. Please try again.")
+scenario=st.session_state.get("maintenance_scenario")
+if scenario:
+    metrics=scenario.get("metrics",scenario); health=float(metrics.get("asset_health_score",0) or 0); probability=float(metrics.get("failure_probability",0) or 0); issue=str(metrics.get("predicted_issue","Condition assessed"))
+    st.markdown('<div class="section-title">Model assessment</div>',unsafe_allow_html=True)
+    c1,c2,c3=st.columns(3)
+    with c1: card("Predicted health",f"{health:.1f}%","Maintenance ML")
+    with c2: card("Failure probability",f"{probability:.1%}","Model-estimated risk")
+    with c3: card("Predicted condition",issue,"Fault classification")
+    msg=(scenario.get("anomalies") or [{}])[0].get("message") or f"The selected telemetry scenario is assessed as {issue} with an estimated health of {health:.1f}% and failure probability of {probability:.1%}."
+    st.markdown(f'<div class="insight"><b>Model insight</b><br>{msg}</div>',unsafe_allow_html=True)
+st.markdown('<div class="section-title">Asset risk overview</div>',unsafe_allow_html=True)
+show_cols=[c for c in ["asset_id","asset_type","status","health_score","failure_probability","predicted_issue","process_temp"] if c in df.columns]; view=df[show_cols].copy()
+if "failure_probability" in view: view=view.sort_values("failure_probability",ascending=False,na_position="last")
+st.dataframe(view,hide_index=True,use_container_width=True,height=320)
+st.markdown('<div class="section-title">Recommended actions</div>',unsafe_allow_html=True)
+if high_risk: st.markdown(f"- Prioritize inspection of **{high_risk}** high-risk asset(s).")
+elif needs_attention: st.markdown(f"- Review **{needs_attention}** asset(s) below the attention threshold.")
+else: st.markdown("- Continue routine monitoring and scheduled preventive maintenance.")
+st.caption("FacilityOPS • Predictive asset intelligence")
